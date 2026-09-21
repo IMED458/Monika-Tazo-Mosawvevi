@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>მონიკა &amp; თაზო</title>
+<meta name="description" content="ქორწილის ციფრული მოსაწვევი — ბათუმი, 11 ოქტომბერი 2026. RSVP, დღის განრიგი და ლოკაცია.">
+<meta name="theme-color" content="#FAF6EE">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Great+Vibes&family=Noto+Sans+Georgian:wght@300;400;500;600&family=Noto+Serif+Georgian:wght@300;400;500;600&display=swap">
+<style>
+/* ============================================================
+   TOKENS
+   The day and night values below are only the two ENDPOINTS.
+   Everything in between is interpolated per scroll frame in JS
+   (see applyPhase) and written back onto :root as inline custom
+   properties — that is what makes the page dusk gradually rather
+   than flip between two themes.
+   ============================================================ */
+:root{
+  /* day (scroll position 0) */
+  --bg:#FAF6EE;
+  --surface:rgba(255,253,248,.72);
+  --surface-2:rgba(240,232,217,.80);
+  --ink:#23303A;
+  --ink-soft:#55676F;
+  --ink-faint:#8C9AA0;
+  --accent:#2F6E7E;
+  --rose:#C08A72;
+  --gold:#B8894B;
+  --line:rgba(35,48,58,.16);
+  --shadow:0 18px 50px -24px rgba(24,40,52,.40);
+
+  --radius:20px;
+  --radius-sm:12px;
+  --maxw:1060px;
+
+  --font-display:"Noto Serif Georgian","Cormorant Garamond",Georgia,serif;
+  --font-body:"Noto Sans Georgian","Montserrat",-apple-system,"Segoe UI",sans-serif;
+  --font-script:"Great Vibes","Cormorant Garamond",cursive;
+
+  /* 0 = full day, 1 = full night. JS keeps this in sync. */
+  --night:0;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} }
+
+body{
+  margin:0;
+  min-width:320px;
+  font-family:var(--font-body);
+  font-size:16px;
+  font-weight:300;
+  line-height:1.75;
+  color:var(--ink);
+  background:var(--bg);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  /* Inherited by every line on the page. It is empty at full day and full
+     night, and swells only across the short stretch of scroll where the ink
+     crosses the sky's own lightness — without it the text would spend that
+     stretch as grey-on-grey. JS drives it (see applyPhase). */
+  text-shadow:var(--text-halo,none);
+}
+img,svg,canvas{max-width:100%;display:block;}
+button,input,textarea{font:inherit;color:inherit;}
+a{color:inherit;}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;margin:0;text-wrap:balance;}
+p{margin:0;}
+button{cursor:pointer;}
+.btn,.submit-button,.attend-button,.counter-btn,.text-input,.loc-badge,.gate-tap{text-shadow:none;}
+
+.container{max-width:var(--maxw);margin:0 auto;padding:0 clamp(20px,5.5vw,44px);}
+
+/* ============================================================
+   SKY — one fixed backdrop for the WHOLE page, so the dusk is
+   continuous from the first section to the footer instead of
+   restarting at each section boundary.
+   ============================================================ */
+.skydome{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.sky-day,.sky-night{position:absolute;inset:0;}
+.sky-day{
+  background:linear-gradient(180deg,#BFDFF0 0%,#DCEAEC 26%,#F5F1E7 58%,#FAF6EE 80%,#F3E9D8 100%);
+}
+.sky-night{
+  opacity:var(--night);
+  background:linear-gradient(180deg,#04080F 0%,#08111C 30%,#0C1724 60%,#101A26 82%,#131D2A 100%);
+}
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:calc(var(--night)*var(--night));}
+
+/* The sun sets and the moon rises across the same scroll range —
+   the single clearest signal that time is passing on the page. */
+.celestial{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+/* Shell: position only. JS owns its transform/opacity as the sun sets.
+   Keeping the CSS keyframes off this element matters — an animation with
+   `forwards` beats an inline style, and the sun would never go down. */
+.sun{position:absolute;top:8vh;right:8vw;width:clamp(74px,12vw,112px);aspect-ratio:1;}
+.sun-core{
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,252,240,1) 0%,rgba(255,241,193,.96) 34%,rgba(255,219,134,.58) 60%,rgba(255,206,110,.10) 84%,transparent 100%);
+  box-shadow:0 0 30px rgba(255,243,191,.50),0 0 80px rgba(255,219,129,.34),0 0 128px rgba(255,200,108,.18);
+  opacity:0;transform:scale(.7);
+}
+body.opened .sun-core{animation:sunEntrance 1.6s cubic-bezier(.2,.9,.2,1) .35s forwards, sunPulse 5s ease-in-out 1.95s infinite;}
+.sun-rays{
+  position:absolute;inset:-90%;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    rgba(255,243,197,.18) 0deg 14deg, transparent 14deg 40deg,
+    rgba(255,243,197,.14) 40deg 52deg, transparent 52deg 88deg,
+    rgba(255,243,197,.16) 88deg 104deg, transparent 104deg 140deg,
+    rgba(255,243,197,.12) 140deg 154deg, transparent 154deg 198deg,
+    rgba(255,243,197,.15) 198deg 212deg, transparent 212deg 250deg,
+    rgba(255,243,197,.12) 250deg 262deg, transparent 262deg 304deg,
+    rgba(255,243,197,.15) 304deg 318deg, transparent 318deg 360deg);
+  filter:blur(8px);animation:sunRays 22s linear infinite;
+}
+.moon{
+  position:absolute;top:8vh;left:8vw;
+  width:clamp(46px,7vw,70px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 36% 34%,#FFFDF6 0%,#EFEADB 46%,#CFCBBD 72%,rgba(190,187,175,.25) 92%,transparent 100%);
+  box-shadow:0 0 20px rgba(226,235,242,.28),0 0 54px rgba(168,196,214,.16);
+  opacity:0;
+}
+.moon::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 64% 30%,rgba(168,168,152,.22) 0 9%,transparent 10%),
+             radial-gradient(circle at 38% 62%,rgba(168,168,152,.18) 0 12%,transparent 13%),
+             radial-gradient(circle at 60% 66%,rgba(168,168,152,.14) 0 7%,transparent 8%);
+}
+@keyframes sunPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+@keyframes sunEntrance{0%{opacity:0;transform:scale(.66);filter:blur(10px);}100%{opacity:1;transform:scale(1);filter:blur(0);}}
+@keyframes sunRays{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+.page{position:relative;z-index:1;}
+
+/* ============================================================
+   SHARED PIECES
+   ============================================================ */
+.eyebrow{
+  font-size:.7rem;letter-spacing:.30em;text-transform:uppercase;
+  color:var(--accent);font-weight:500;
+}
+.divider{display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;max-width:230px;}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:linear-gradient(to right,transparent,var(--line),transparent);}
+.divider span{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 60%,transparent);}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:52px;padding:14px 30px;border-radius:999px;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  background:var(--accent);color:var(--bg);
+  font-size:.76rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  text-decoration:none;
+  box-shadow:0 14px 34px -18px color-mix(in srgb,var(--accent) 90%,transparent);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background-color .5s linear,opacity .2s ease;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 20px 42px -18px color-mix(in srgb,var(--accent) 95%,transparent);}
+.btn:active{transform:scale(.97);transition:transform .1s ease;}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+
+section{padding:clamp(60px,9vw,104px) 0;position:relative;}
+.section-head{max-width:620px;margin:0 auto 42px;text-align:center;}
+.section-head h2{font-size:clamp(1.9rem,6.5vw,2.8rem);line-height:1.15;margin-top:12px;}
+.section-head p{color:var(--ink-soft);margin-top:14px;}
+
+/* Reveal in, then dissolve out again once scrolled past — the same
+   editorial fade the reference invitation uses, kept scroll-linked
+   (no CSS opacity transition) so it tracks the finger exactly. */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .85s cubic-bezier(.2,.7,.3,1),transform .85s cubic-bezier(.2,.7,.3,1);}
+.reveal.is-visible{opacity:1;transform:translateY(0);}
+.reveal.scroll-linked{transition:transform .85s cubic-bezier(.2,.7,.3,1);}
+@media (prefers-reduced-motion:reduce){ .reveal{transition:opacity .35s ease;transform:none;} }
+
+/* ============================================================
+   INTRO GATE — three panels crossfade, then the whole card
+   dissolves into the hero underneath.
+   ============================================================ */
+html.gate-lock,html.gate-lock body{overflow:hidden;height:100%;}
+#gate{
+  /* Fixed warm palette on purpose: the opening card always reads as a
+     printed invitation, it never follows the page's day/night state. */
+  --g-bg:#FBF7EE; --g-ink:#23303A; --g-soft:#5B6B73; --g-gold:#B8894B;
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 38%,rgba(47,110,126,.10),transparent 62%),var(--g-bg);
+  cursor:pointer;
+  transition:opacity 1.15s cubic-bezier(.22,.6,.14,1);
+}
+#gate.fade-out{opacity:0;pointer-events:none;}
+#gate.hidden{display:none;}
+.gate-panel{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:24px;padding:26px;text-align:center;
+  opacity:0;transform:scale(.96) translateY(8px);pointer-events:none;
+  transition:opacity .7s cubic-bezier(.22,.68,.32,1),transform .7s cubic-bezier(.22,.68,.32,1);
+}
+.gate-panel.active{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+.gate-panel.leaving{opacity:0;transform:scale(1.03) translateY(-8px);}
+
+.gate-plate{
+  width:min(80vw,380px);border-radius:999px 999px 18px 18px;overflow:hidden;
+  box-shadow:0 26px 60px -26px rgba(24,40,52,.45);
+  border:1px solid rgba(35,48,58,.12);
+}
+.gate-plate img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;}
+.gate-city{
+  font-family:var(--font-display);font-size:.78rem;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--g-gold);
+}
+.gate-tap{
+  font-family:var(--font-body);font-size:.95rem;letter-spacing:.06em;color:var(--g-soft);
+  animation:tapPulse 2.4s ease-in-out infinite;
+}
+@keyframes tapPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+.gate-monogram{
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:.22em;
+  font-family:var(--font-display);font-size:clamp(2.2rem,11vw,4rem);
+  color:var(--g-ink);max-width:90vw;line-height:1.1;
+}
+.gate-amp{font-family:var(--font-script);font-size:.9em;color:var(--g-gold);padding:0 .06em;}
+.gate-portrait img{
+  max-width:min(78vw,330px);max-height:74vh;width:auto;height:auto;
+  border-radius:14px;box-shadow:0 26px 60px -22px rgba(24,40,52,.5);
+  transition:transform 1.15s cubic-bezier(.22,.6,.14,1);
+}
+.gate-panel.settle .gate-portrait img{transform:scale(1.06);}
+@media (prefers-reduced-motion:reduce){
+  .gate-tap{animation:none;opacity:.9;}
+  #gate,.gate-panel{transition-duration:.3s;}
+  .gate-portrait img{transition-duration:.35s;}
+  .gate-panel.settle .gate-portrait img{transform:none;}
+}
+
+/* ============================================================
+   HERO — the Batumi seafront wakes up: clouds part, a ship
+   crosses, birds pass, the skyline and sea settle in.
+   ============================================================ */
+.hero{
+  position:relative;min-height:100svh;
+  display:grid;place-items:center;padding:24px;
+  overflow:hidden;isolation:isolate;
+}
+.hero-parallax{position:absolute;inset:0;will-change:transform,opacity;}
+
+.cloud{
+  position:absolute;width:clamp(150px,24vw,270px);height:clamp(62px,10vw,110px);
+  filter:drop-shadow(0 24px 28px rgba(15,37,54,.10));opacity:.96;
+}
+.cloud-part{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.98),rgba(244,248,250,.92) 55%,rgba(214,226,233,.70) 74%,rgba(214,226,233,.06) 100%);
+}
+.cloud-part.p1{width:52%;height:72%;left:4%;bottom:0;}
+.cloud-part.p2{width:42%;height:78%;left:25%;top:8%;}
+.cloud-part.p3{width:44%;height:68%;right:6%;bottom:3%;}
+.cloud-mist{position:absolute;left:10%;right:10%;bottom:6%;height:24%;border-radius:999px;
+  background:linear-gradient(to bottom,rgba(244,248,250,.92),rgba(224,234,240,.62));filter:blur(8px);}
+.cloud-1{top:15%;left:-6%;}
+.cloud-2{top:24%;right:-4%;width:clamp(180px,28vw,300px);}
+.cloud-3{top:44%;left:-8%;width:clamp(170px,27vw,290px);opacity:.86;}
+.cloud-4{top:54%;right:-3%;width:clamp(150px,24vw,240px);opacity:.78;}
+body.opened .cloud-1{animation:cloudOpenL 2.8s cubic-bezier(.2,.8,.16,1) forwards,cloudDriftR 30s linear 2.8s infinite;}
+body.opened .cloud-2{animation:cloudOpenR 3.1s cubic-bezier(.2,.8,.16,1) forwards,cloudDriftL 34s linear 3.1s infinite;}
+body.opened .cloud-3{animation:cloudOpenLFar 3.4s cubic-bezier(.2,.8,.16,1) forwards,cloudDriftR 26s linear 3.4s infinite;}
+body.opened .cloud-4{animation:cloudOpenRFar 3.8s cubic-bezier(.2,.8,.16,1) forwards,cloudDriftL 28s linear 3.8s infinite;}
+@keyframes cloudOpenL{0%{transform:translate3d(20vw,0,0) scale(1.26);opacity:0;filter:blur(12px);}100%{transform:none;opacity:.96;filter:blur(0);}}
+@keyframes cloudOpenR{0%{transform:translate3d(-20vw,0,0) scale(1.28);opacity:0;filter:blur(12px);}100%{transform:scale(1.05);opacity:.94;filter:blur(0);}}
+@keyframes cloudOpenLFar{0%{transform:translate3d(24vw,-2vh,0) scale(1.34);opacity:0;filter:blur(14px);}100%{transform:none;opacity:.86;filter:blur(0);}}
+@keyframes cloudOpenRFar{0%{transform:translate3d(-24vw,-2vh,0) scale(1.30);opacity:0;filter:blur(14px);}100%{transform:none;opacity:.78;filter:blur(0);}}
+@keyframes cloudDriftR{0%{transform:translateX(0);}100%{transform:translateX(138vw);}}
+@keyframes cloudDriftL{0%{transform:translateX(0);}100%{transform:translateX(-140vw);}}
+
+.hero-ship{
+  position:absolute;left:-34vw;bottom:17vh;width:clamp(200px,30vw,360px);z-index:2;opacity:0;
+  filter:drop-shadow(0 16px 24px rgba(12,31,44,.20));pointer-events:none;
+}
+body.opened .hero-ship{animation:shipSail 4.4s linear .3s forwards;}
+.hero-ship svg{width:100%;height:auto;overflow:visible;}
+.ship-hull{fill:rgba(19,37,52,.96);}
+.ship-deck{fill:rgba(41,82,105,.92);}
+.ship-cabin{fill:rgba(238,246,248,.94);}
+.ship-window{fill:rgba(112,191,225,.78);}
+.ship-sail-main{fill:rgba(255,255,255,.95);}
+.ship-sail-side{fill:rgba(240,247,250,.84);}
+.ship-flag{fill:rgba(224,160,120,.96);}
+.ship-shadow{fill:rgba(8,19,29,.18);}
+.ship-line{stroke:rgba(230,241,244,.8);stroke-width:2;stroke-linecap:round;fill:none;}
+.ship-wave{position:absolute;left:8%;right:10%;bottom:-10px;height:14px;border-radius:999px;
+  background:linear-gradient(to right,transparent,rgba(255,255,255,.42),transparent);filter:blur(7px);}
+@keyframes shipSail{
+  0%{opacity:0;transform:translate3d(0,10px,0);}
+  8%{opacity:1;transform:translate3d(10vw,8px,0);}
+  92%{opacity:1;transform:translate3d(112vw,-8px,0);}
+  100%{opacity:0;transform:translate3d(124vw,-10px,0);}
+}
+
+.birds{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.birds svg{position:absolute;top:21%;left:-20%;width:min(36vw,230px);opacity:.5;
+  color:rgba(20,34,44,.5);animation:birdsFly 22s linear infinite;}
+.birds svg:nth-child(2){top:33%;width:min(24vw,160px);animation-duration:27s;animation-delay:-7s;opacity:.42;}
+@keyframes birdsFly{
+  0%{transform:translateX(0) translateY(0) scale(.95);}
+  50%{transform:translateX(60vw) translateY(-10px) scale(1);}
+  100%{transform:translateX(142vw) translateY(6px) scale(.98);}
+}
+
+/* The Batumi boulevard silhouette: skyline, Ali & Nino, the wheel, the sea. */
+.batumi-scene{
+  position:absolute;left:0;right:0;bottom:0;height:min(38vh,300px);pointer-events:none;
+  opacity:0;transform:translateY(14px);
+  transition:opacity 1.2s ease 1.1s,transform 1.2s ease 1.1s;
+}
+body.opened .batumi-scene{opacity:1;transform:none;}
+.skyline-base{
+  position:absolute;left:0;right:0;bottom:24%;height:23%;
+  background:linear-gradient(to right,
+    rgba(31,56,72,.88) 0%,rgba(24,46,62,.92) 12%,rgba(31,56,72,.88) 26%,
+    rgba(24,46,62,.92) 40%,rgba(31,56,72,.88) 56%,rgba(24,46,62,.92) 72%,
+    rgba(31,56,72,.88) 88%,rgba(24,46,62,.92) 100%);
+  clip-path:polygon(0 100%,0 56%,10% 50%,10% 68%,18% 68%,18% 42%,25% 42%,25% 61%,33% 61%,33% 36%,39% 36%,39% 63%,47% 63%,47% 45%,55% 45%,55% 66%,63% 66%,63% 40%,70% 40%,70% 58%,79% 58%,79% 34%,87% 34%,87% 62%,94% 62%,94% 46%,100% 46%,100% 100%);
+}
+.ali-nino{position:absolute;left:12%;bottom:24%;width:clamp(104px,16vw,150px);height:min(30vh,226px);
+  filter:drop-shadow(0 0 16px rgba(181,214,220,.10));}
+.ali-nino svg{width:100%;height:100%;overflow:visible;}
+.ali-outline{fill:rgba(31,56,72,.30);stroke:rgba(28,52,68,.80);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round;}
+.ali-rib{stroke:rgba(28,52,68,.34);stroke-width:2.2;stroke-linecap:round;fill:none;}
+.ali-nino-base{position:absolute;left:50%;bottom:-1%;width:86%;height:6%;transform:translateX(-50%);
+  border-radius:999px;background:linear-gradient(to bottom,rgba(28,52,68,.9),rgba(16,32,44,.96));}
+.ferris-wheel{position:absolute;right:12%;bottom:27%;width:clamp(88px,16vw,124px);height:clamp(88px,16vw,124px);}
+.wheel-rotor{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(31,56,72,.52);
+  animation:wheelSpin 22s linear infinite;background:radial-gradient(circle,transparent 0 62%,rgba(31,56,72,.07) 62% 100%);}
+.wheel-rotor::before,.wheel-rotor::after,.wheel-spoke{
+  content:"";position:absolute;left:50%;top:50%;width:2px;height:100%;
+  background:rgba(31,56,72,.30);transform-origin:center;
+}
+.wheel-rotor::before{transform:translate(-50%,-50%) rotate(0deg);}
+.wheel-rotor::after{transform:translate(-50%,-50%) rotate(90deg);}
+.wheel-spoke.s1{transform:translate(-50%,-50%) rotate(45deg);}
+.wheel-spoke.s2{transform:translate(-50%,-50%) rotate(-45deg);}
+.wheel-hub{position:absolute;left:50%;top:50%;width:11px;height:11px;border-radius:50%;
+  transform:translate(-50%,-50%);background:rgba(31,56,72,.72);}
+.wheel-cabin{position:absolute;width:10px;height:13px;border-radius:4px;background:rgba(31,56,72,.6);
+  box-shadow:0 0 calc(8px * var(--night)) rgba(255,214,140,calc(.9*var(--night)));}
+.wheel-cabin.c1{left:50%;top:-6px;transform:translateX(-50%);}
+.wheel-cabin.c2{right:8px;top:14px;}
+.wheel-cabin.c3{right:-2px;top:50%;transform:translateY(-50%);}
+.wheel-cabin.c4{right:8px;bottom:14px;}
+.wheel-cabin.c5{left:50%;bottom:-6px;transform:translateX(-50%);}
+.wheel-cabin.c6{left:8px;bottom:14px;}
+.wheel-cabin.c7{left:-2px;top:50%;transform:translateY(-50%);}
+.wheel-cabin.c8{left:8px;top:14px;}
+.wheel-support{position:absolute;left:50%;bottom:-14%;width:6px;height:26%;transform:translateX(-50%);
+  background:linear-gradient(to bottom,rgba(31,56,72,.42),rgba(16,32,44,.9));border-radius:999px;z-index:2;}
+.wheel-stand{position:absolute;left:50%;bottom:-28%;width:34%;height:42%;transform:translateX(-50%);
+  clip-path:polygon(50% 0,100% 100%,78% 100%,50% 34%,22% 100%,0 100%);background:rgba(20,38,52,.94);}
+@keyframes wheelSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.sea-layer{
+  position:absolute;left:0;right:0;bottom:0;height:42%;
+  background:linear-gradient(to bottom,rgba(76,132,148,.34),rgba(24,52,70,.70)),
+             linear-gradient(to right,rgba(173,209,215,.08),rgba(255,255,255,.02),rgba(173,209,215,.08));
+  border-top:1px solid rgba(215,234,237,.22);
+}
+.sea-layer::after{content:"";position:absolute;left:18%;right:18%;top:22%;height:30%;
+  background:linear-gradient(to right,transparent,rgba(255,231,162,.22),transparent);filter:blur(10px);}
+
+.hero-content{
+  position:relative;z-index:3;width:min(100%,720px);text-align:center;
+  padding:18vh 0 14vh;
+  opacity:0;transform:translateY(26px) scale(.985);
+  transition:opacity 1.2s ease 3.5s,transform 1.2s ease 3.5s;
+}
+body.opened .hero-content{opacity:1;transform:none;}
+.hero-eyebrow{
+  display:inline-block;margin-bottom:20px;
+  font-size:clamp(.62rem,2.6vw,.76rem);letter-spacing:.32em;text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.hero-title{
+  font-family:var(--font-display);font-weight:400;
+  font-size:clamp(2.6rem,11vw,5.4rem);line-height:1.06;letter-spacing:.005em;
+  color:var(--ink);
+  text-shadow:0 12px 34px rgba(18,32,44,.14);
+}
+.hero-title .amp{font-family:var(--font-script);color:var(--gold);font-size:.86em;margin:0 .14em;display:inline-block;transform:translateY(-.02em);}
+.hero-date{
+  margin-top:18px;font-size:clamp(.82rem,3.2vw,1rem);letter-spacing:.26em;
+  text-transform:uppercase;color:var(--ink-soft);
+}
+.hero-actions{margin-top:30px;display:flex;justify-content:center;}
+.scroll-indicator{
+  position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:3;
+  display:grid;justify-items:center;gap:10px;color:var(--ink-soft);opacity:0;
+}
+body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 4.2s both;}
+.scroll-line{width:1px;height:58px;transform-origin:top;
+  background:linear-gradient(to bottom,transparent,currentColor,transparent);
+  animation:scrollLine 2.5s ease-in-out infinite;}
+.scroll-text{font-size:.62rem;letter-spacing:.38em;text-transform:uppercase;}
+@keyframes indicatorIn{0%{opacity:0;transform:translateX(-50%) translateY(12px);}100%{opacity:1;transform:translateX(-50%);}}
+@keyframes scrollLine{0%,100%{transform:scaleY(.5);opacity:.45;}50%{transform:scaleY(1);opacity:1;}}
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+.content{width:min(100%,560px);margin:0 auto;padding:0 20px;}
+
+.invite-copy{color:var(--ink-soft);font-size:clamp(.96rem,3.6vw,1.04rem);line-height:1.95;}
+.invite-copy + .invite-copy{margin-top:16px;}
+.invite-quote{
+  font-family:var(--font-display);font-style:italic;font-weight:300;
+  font-size:clamp(1.3rem,5.4vw,1.7rem);line-height:1.55;color:var(--ink);
+  text-align:center;
+}
+.invite-cite{display:block;margin-top:20px;font-family:var(--font-script);font-size:1.9rem;color:var(--rose);text-align:center;}
+
+/* Countdown */
+.countdown-wrap{display:flex;justify-content:center;flex-wrap:wrap;gap:clamp(10px,3vw,20px);}
+.count-tile{
+  width:clamp(70px,20vw,100px);padding:18px 0;text-align:center;
+  border-radius:var(--radius);border:1px solid var(--line);
+  background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:var(--shadow);
+}
+.count-num{font-family:var(--font-display);font-size:clamp(1.6rem,6vw,2.3rem);color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1;}
+.count-label{margin-top:4px;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);}
+
+/* Detail cards */
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+.card{
+  padding:20px 18px;min-height:152px;display:grid;align-content:space-between;gap:10px;
+  border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow);
+  transition:transform .35s ease,border-color .35s ease;
+}
+.card:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
+.card-icon{font-size:1.4rem;line-height:1;}
+.card-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);}
+.info-value{font-family:var(--font-display);font-size:clamp(1.15rem,4.6vw,1.5rem);line-height:1.2;}
+
+/* Names */
+.names-section{text-align:center;}
+.display-names{font-family:var(--font-display);font-size:clamp(2.4rem,11vw,4rem);line-height:1.08;}
+.display-names .amp{font-family:var(--font-script);color:var(--gold);margin:0 .14em;display:inline-block;}
+
+/* Gallery — a swipeable deck of prints on phones, a grid on desktop. */
+.gallery-stage{position:relative;width:min(76vw,300px);aspect-ratio:4/5;margin:0 auto;touch-action:pan-y;}
+.g-card{
+  position:absolute;inset:0;border-radius:var(--radius-sm);overflow:hidden;
+  background:var(--surface);border:1px solid var(--line);padding:8px;
+  box-shadow:0 18px 40px -20px rgba(18,32,44,.5);
+  transform-origin:50% 62%;will-change:transform;cursor:grab;
+}
+.g-card img{width:100%;height:100%;object-fit:cover;border-radius:5px;-webkit-user-drag:none;user-select:none;pointer-events:none;}
+.gallery-hint{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:20px;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);
+}
+.gallery-dots{display:flex;justify-content:center;gap:7px;margin-top:16px;}
+.gallery-dots i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:background-color .3s ease,transform .3s ease;}
+.gallery-dots i.on{background:var(--accent);transform:scale(1.35);}
+@media (min-width:760px){
+  .gallery-stage{display:none;}
+  .gallery-hint,.gallery-dots{display:none;}
+  .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .gallery-grid .g-item{aspect-ratio:4/5;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--line);}
+  .gallery-grid .g-item img{width:100%;height:100%;object-fit:cover;transition:transform .5s cubic-bezier(.2,.7,.3,1);}
+  .gallery-grid .g-item:hover img{transform:scale(1.06);}
+}
+@media (max-width:759px){ .gallery-grid{display:none;} }
+
+/* Timeline */
+.timeline{position:relative;padding-left:30px;}
+.timeline::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;
+  background:linear-gradient(to bottom,transparent,var(--accent),transparent);opacity:.65;}
+.t-item{position:relative;padding:0 0 26px 18px;opacity:0;transform:translateX(22px);
+  transition:opacity .72s ease,transform .72s ease;}
+.t-item.is-visible{opacity:1;transform:none;}
+.t-dot{position:absolute;left:-25px;top:9px;width:13px;height:13px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 3px var(--bg),0 0 16px color-mix(in srgb,var(--accent) 65%,transparent);}
+.t-time{font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.t-title{font-family:var(--font-display);font-size:clamp(1.3rem,5.4vw,1.7rem);line-height:1.2;}
+.t-desc{margin-top:6px;color:var(--ink-soft);font-size:.92rem;line-height:1.75;}
+
+/* Location */
+.loc-cards{display:flex;flex-direction:column;gap:24px;}
+.loc-card{
+  border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);
+  background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow);
+}
+.loc-art{position:relative;width:100%;aspect-ratio:1/1;background:var(--surface-2);}
+.loc-art img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  /* The painted plates were graded for daylight; at night they cool and
+     dim in step with everything else rather than glaring off the page. */
+  filter:brightness(calc(1 - .48*var(--night))) saturate(calc(1 - .30*var(--night))) contrast(calc(1 + .10*var(--night)));
+}
+.loc-maplink{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:flex-end;padding:12px;text-decoration:none;}
+.loc-badge{
+  font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#fff;
+  background:rgba(18,30,40,.58);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  padding:8px 15px;border-radius:999px;white-space:nowrap;transition:background-color .2s ease;
+}
+.loc-maplink:hover .loc-badge,.loc-maplink:active .loc-badge{background:var(--accent);}
+.loc-info{padding:20px 22px 24px;border-top:1px solid var(--line);text-align:center;}
+.loc-label{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.loc-time{font-family:var(--font-display);font-size:1.6rem;color:var(--gold);font-variant-numeric:tabular-nums;}
+.loc-name{font-family:var(--font-display);font-size:1.32rem;margin-top:2px;}
+.loc-address{margin-top:6px;color:var(--ink-soft);font-size:.9rem;}
+
+/* Dress code */
+.dress-art{max-width:340px;margin:0 auto 26px;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--line);box-shadow:var(--shadow);}
+.dress-art img{width:100%;aspect-ratio:1/1;object-fit:cover;
+  filter:brightness(calc(1 - .42*var(--night))) saturate(calc(1 - .28*var(--night)));}
+.dress-body{text-align:center;}
+.dress-line{font-size:1.02rem;line-height:1.9;}
+.dress-note{margin-top:14px;color:var(--ink-soft);font-size:.95rem;}
+
+/* RSVP */
+.rsvp-card{
+  position:relative;isolation:isolate;padding:26px 20px 22px;
+  border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow);overflow:hidden;
+}
+.rsvp-card::before{
+  content:"";position:absolute;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--accent) 16%,transparent) 0%,transparent 62%);
+  animation:glowPulse 6s ease-in-out infinite;
+}
+@keyframes glowPulse{0%,100%{opacity:.35;transform:scale(1);}50%{opacity:.75;transform:scale(1.08);}}
+.rsvp-form{display:grid;gap:16px;margin-top:18px;}
+.field{display:grid;gap:9px;}
+.input-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);}
+.text-input{
+  width:100%;min-height:52px;padding:13px 16px;border-radius:14px;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 60%,transparent);
+  outline:none;transition:border-color .25s ease,box-shadow .25s ease;
+}
+.text-input::placeholder{color:var(--ink-faint);}
+.text-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent);}
+textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
+.field.invalid .text-input,.field.invalid .attend-button{border-color:#D9737F;box-shadow:0 0 0 4px rgba(217,115,127,.12);}
+.counter-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:4px 0;flex-wrap:wrap;}
+.counter-row .input-label{flex:1 1 auto;min-width:120px;}
+.counter-controls{display:flex;align-items:center;gap:10px;}
+.counter-btn{
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:1.2rem;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 55%,transparent);
+  transition:transform .25s ease,border-color .25s ease;
+}
+.counter-btn:hover{transform:translateY(-2px);border-color:var(--accent);}
+.guest-number{min-width:56px;text-align:center;font-family:var(--font-display);font-size:clamp(1.8rem,7vw,2.4rem);line-height:1;}
+.attendance-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.attend-button{
+  min-height:52px;border-radius:14px;font-size:.92rem;letter-spacing:.04em;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 55%,transparent);
+  transition:transform .25s ease,border-color .25s ease,background-color .25s ease;
+}
+.attend-button:hover{transform:translateY(-2px);}
+.attend-button.active-yes{background:rgba(88,166,126,.18);border-color:rgba(88,166,126,.55);}
+.attend-button.active-no{background:rgba(196,110,124,.14);border-color:rgba(196,110,124,.45);}
+.submit-button{
+  position:relative;overflow:hidden;min-height:54px;padding:14px 22px;border-radius:14px;border:0;
+  background:var(--accent);color:var(--bg);
+  letter-spacing:.26em;text-transform:uppercase;font-size:.74rem;
+  box-shadow:0 16px 36px -18px color-mix(in srgb,var(--accent) 95%,transparent);
+  transition:transform .25s ease,box-shadow .25s ease,background-color .5s linear;
+}
+.submit-button:hover{transform:translateY(-2px);}
+.submit-button::before{
+  content:"";position:absolute;inset:0;transform:translateX(-135%);
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);
+  transition:transform .8s ease;
+}
+.submit-button:hover::before{transform:translateX(135%);}
+.form-note{font-size:.72rem;color:var(--ink-faint);text-align:center;letter-spacing:.04em;}
+.success-message{display:none;text-align:center;padding:14px 4px 6px;}
+.success-message.show{display:block;}
+.success-icon{
+  display:inline-grid;place-items:center;width:78px;height:78px;margin:0 auto 16px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%);
+  font-size:1.9rem;transform:scale(0);
+}
+.success-message.show .success-icon{animation:iconPop .85s cubic-bezier(.18,1.35,.42,1) forwards;}
+@keyframes iconPop{0%{transform:scale(0);}60%{transform:scale(1.12);}100%{transform:scale(1);}}
+.success-title{font-family:var(--font-display);font-size:clamp(1.9rem,8vw,2.6rem);margin-bottom:8px;}
+.success-copy{color:var(--ink-soft);line-height:1.85;}
+
+/* FAQ */
+.faq-item{border-bottom:1px solid var(--line);}
+.faq-q{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:18px 2px;background:none;border:0;text-align:left;font-size:.98rem;color:var(--ink);
+}
+.faq-q .plus{color:var(--accent);font-size:1.25rem;line-height:1;transition:transform .3s ease;}
+.faq-item.open .faq-q .plus{transform:rotate(45deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.2,.7,.3,1);}
+.faq-item.open .faq-a{max-height:320px;}
+.faq-a p{padding:0 2px 18px;color:var(--ink-soft);font-size:.93rem;line-height:1.8;}
+
+/* Petals on a confirmed RSVP */
+.petal-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30;}
+.petal{position:fixed;top:-40px;width:15px;height:21px;border-radius:70% 30% 65% 35%;opacity:.9;
+  animation:petalFall linear forwards;}
+@keyframes petalFall{0%{transform:translate3d(0,-8vh,0) rotate(0deg);}100%{transform:translate3d(var(--drift,40px),112vh,0) rotate(720deg);}}
+
+/* Footer */
+.footer{text-align:center;padding:30px 0 40px;color:var(--ink-soft);}
+.footer-script{font-family:var(--font-script);font-size:clamp(2.2rem,10vw,3rem);margin-bottom:8px;color:var(--ink);}
+.footer-date{font-size:.66rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.footer-note{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-faint);}
+
+@media (min-width:560px){ .content{width:min(100%,600px);} }
+@media (max-width:420px){ .info-grid{grid-template-columns:1fr;} }
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;}
+  .hero-content,.batumi-scene{opacity:1 !important;transform:none !important;transition:none !important;}
+  .sun{opacity:1 !important;transform:none !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= OPENING GATE ======================= -->
+<div id="gate" role="button" tabindex="0" aria-label="შეეხეთ მოსაწვევის გასახსნელად">
+  <div class="gate-panel gate-closed active">
+    <div class="gate-city">ბათუმი · 2026</div>
+    <div class="gate-plate"><img src="assets/batumi/gate-plate.jpg" alt=""></div>
+    <div class="gate-tap">შეეხეთ გასახსნელად</div>
+  </div>
+  <div class="gate-panel gate-initials">
+    <div class="gate-monogram"><span>მონიკა</span><span class="gate-amp">&amp;</span><span>თაზო</span></div>
+  </div>
+  <div class="gate-panel gate-portrait">
+    <img src="assets/photos/3.jpg" alt="">
+  </div>
+</div>
+
+<!-- ======================= SKY ======================= -->
+<div class="skydome" aria-hidden="true">
+  <div class="sky-day"></div>
+  <div class="sky-night"></div>
+</div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+<div class="celestial" aria-hidden="true">
+  <div class="sun" id="sun"><div class="sun-core"><div class="sun-rays"></div></div></div>
+  <div class="moon" id="moon"></div>
+</div>
+
+<div class="page">
+
+  <!-- ======================= HERO ======================= -->
+  <header class="hero" id="hero">
+    <div class="hero-parallax" id="heroParallax" aria-hidden="true">
+
+      <div class="hero-ship">
+        <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+          <ellipse class="ship-shadow" cx="208" cy="184" rx="140" ry="14"/>
+          <path class="ship-hull" d="M62 144h232c28 0 52 11 65 31l-18 14H110c-31 0-53-8-67-23-9-10-15-24-18-39l15-8Z"/>
+          <path class="ship-deck" d="M136 114h124c25 0 47 12 61 30H118c2-11 7-21 18-30Z"/>
+          <path class="ship-cabin" d="M175 84h56c12 0 22 10 22 22v8h-98v-8c0-12 8-22 20-22Z"/>
+          <rect class="ship-window" x="168" y="96" width="16" height="8" rx="3"/>
+          <rect class="ship-window" x="190" y="96" width="16" height="8" rx="3"/>
+          <rect class="ship-window" x="212" y="96" width="16" height="8" rx="3"/>
+          <rect class="ship-window" x="234" y="96" width="16" height="8" rx="3"/>
+          <path class="ship-line" d="M205 46v68"/>
+          <path class="ship-line" d="M231 58v56"/>
+          <path class="ship-sail-main" d="M208 50c50 20 81 45 94 72h-94V50Z"/>
+          <path class="ship-sail-side" d="M201 58c-34 18-58 39-69 64h69V58Z"/>
+          <path class="ship-sail-side" d="M233 72c25 10 42 24 53 42h-53V72Z"/>
+          <path class="ship-line" d="M207 52c24 16 47 37 67 70"/>
+          <path class="ship-line" d="M202 60c-16 13-32 31-45 62"/>
+          <path class="ship-flag" d="M206 46h22l-6 9 6 9h-22z"/>
+          <path class="ship-line" d="M144 130h116"/>
+          <path class="ship-line" d="M120 152h170"/>
+        </svg>
+        <div class="ship-wave"></div>
+      </div>
+
+      <div class="cloud cloud-1"><span class="cloud-part p1"></span><span class="cloud-part p2"></span><span class="cloud-part p3"></span><span class="cloud-mist"></span></div>
+      <div class="cloud cloud-2"><span class="cloud-part p1"></span><span class="cloud-part p2"></span><span class="cloud-part p3"></span><span class="cloud-mist"></span></div>
+      <div class="cloud cloud-3"><span class="cloud-part p1"></span><span class="cloud-part p2"></span><span class="cloud-part p3"></span><span class="cloud-mist"></span></div>
+      <div class="cloud cloud-4"><span class="cloud-part p1"></span><span class="cloud-part p2"></span><span class="cloud-part p3"></span><span class="cloud-mist"></span></div>
+
+      <div class="birds">
+        <svg viewBox="0 0 120 40" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 10 Q10 0 20 10 Q30 0 40 10 Q30 5 20 15 Q10 5 0 10"/>
+          <path d="M48 24 Q58 14 68 24 Q78 14 88 24 Q78 19 68 29 Q58 19 48 24"/>
+          <path d="M84 14 Q94 4 104 14 Q114 4 124 14 Q114 9 104 19 Q94 9 84 14"/>
+        </svg>
+        <svg viewBox="0 0 120 40" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 10 Q10 0 20 10 Q30 0 40 10 Q30 5 20 15 Q10 5 0 10"/>
+          <path d="M48 24 Q58 14 68 24 Q78 14 88 24 Q78 19 68 29 Q58 19 48 24"/>
+          <path d="M84 14 Q94 4 104 14 Q114 4 124 14 Q114 9 104 19 Q94 9 84 14"/>
+        </svg>
+      </div>
+
+      <div class="batumi-scene">
+        <div class="skyline-base"></div>
+        <div class="ali-nino">
+          <svg viewBox="0 0 220 320" role="img" aria-label="ალი და ნინოს ქანდაკება">
+            <path class="ali-outline" d="M70 42c9-14 30-14 39 0 6 9 4 21-1 30-5 8-8 13-8 19v20c0 10 4 20 9 31l17 34c6 12 8 26 7 39l-2 18c-1 9 1 19 6 28l16 30c6 11 9 23 9 36v2H131l-8-31c-3-10-5-20-5-31v-21c0-12-2-23-6-34l-9-22c-4-10-6-20-6-31v-22c0-6-2-12-6-17-8-10-13-22-11-35 1-8 4-14 10-23Z"/>
+            <path class="ali-outline" d="M151 42c-9-14-30-14-39 0-6 9-4 21 1 30 5 8 8 13 8 19v20c0 10-4 20-9 31l-17 34c-6 12-8 26-7 39l2 18c1 9-1 19-6 28l-16 30c-6 11-9 23-9 36v2h31l8-31c3-10 5-20 5-31v-21c0-12 2-23 6-34l9-22c4-10 6-20 6-31v-22c0-6 2-12 6-17 8-10 13-22 11-35-1-8-4-14-10-23Z"/>
+            <path class="ali-rib" d="M88 55c6 6 8 15 6 24-2 11-7 18-13 25"/>
+            <path class="ali-rib" d="M96 88v26c0 12 4 23 10 35"/>
+            <path class="ali-rib" d="M104 156l13 28c5 12 7 23 7 36"/>
+            <path class="ali-rib" d="M124 233c0 12 1 24 5 35l12 44"/>
+            <path class="ali-rib" d="M132 56c-6 6-8 15-6 24 2 11 7 18 13 25"/>
+            <path class="ali-rib" d="M124 88v26c0 12-4 23-10 35"/>
+            <path class="ali-rib" d="M116 156l-13 28c-5 12-7 23-7 36"/>
+            <path class="ali-rib" d="M96 233c0 12-1 24-5 35l-12 44"/>
+          </svg>
+          <div class="ali-nino-base"></div>
+        </div>
+        <div class="ferris-wheel">
+          <div class="wheel-rotor">
+            <div class="wheel-spoke s1"></div><div class="wheel-spoke s2"></div>
+            <div class="wheel-hub"></div>
+            <div class="wheel-cabin c1"></div><div class="wheel-cabin c2"></div>
+            <div class="wheel-cabin c3"></div><div class="wheel-cabin c4"></div>
+            <div class="wheel-cabin c5"></div><div class="wheel-cabin c6"></div>
+            <div class="wheel-cabin c7"></div><div class="wheel-cabin c8"></div>
+          </div>
+          <div class="wheel-support"></div>
+          <div class="wheel-stand"></div>
+        </div>
+        <div class="sea-layer"></div>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">გიწვევთ ქორწილზე</div>
+      <h1 class="hero-title">მონიკა<span class="amp">&amp;</span>თაზო</h1>
+      <div class="hero-date">11 ოქტომბერი, 2026 · ბათუმი</div>
+      <div class="hero-actions">
+        <a class="btn" href="#rsvp" id="heroCta">დაადასტურე დასწრება</a>
+      </div>
+    </div>
+
+    <div class="scroll-indicator" aria-hidden="true">
+      <div class="scroll-line"></div>
+      <div class="scroll-text">scroll</div>
+    </div>
+  </header>
+
+  <!-- ======================= MAIN ======================= -->
+  <main>
+    <div class="content">
+
+      <!-- Invitation -->
+      <section id="invitation">
+        <div class="section-head reveal">
+          <div class="eyebrow">Invitation</div>
+          <h2>სიხარულით გიწვევთ ჩვენს ქორწილში</h2>
+        </div>
+        <div class="reveal">
+          <p class="invite-copy">იქ, სადაც აჭარული მზის ოქროსფერი სითბო და ზღვის სათუთი სინაზე ერთმანეთს ერწყმის, ჩვენი ცხოვრების ახალი ისტორია იბადება.</p>
+          <p class="invite-copy">სიყვარულით გეპატიჟებით ჩვენს ქორწილში.</p>
+          <p class="invite-copy">გთხოვთ, მობრძანდეთ და ჩვენთან ერთად გაიზიაროთ ეს დღე — სავსე სითბოთი, მეგობრული გარემოთი და იმ დიდი სიყვარულით, რომელიც ერთმანეთთან გვაკავშირებს.</p>
+        </div>
+      </section>
+
+      <!-- Countdown -->
+      <section id="countdown">
+        <div class="section-head reveal">
+          <div class="eyebrow">დარჩენილია</div>
+          <div class="divider"><span></span></div>
+        </div>
+        <div class="countdown-wrap reveal">
+          <div class="count-tile"><div class="count-num" id="cd-d">--</div><div class="count-label">დღე</div></div>
+          <div class="count-tile"><div class="count-num" id="cd-h">--</div><div class="count-label">საათი</div></div>
+          <div class="count-tile"><div class="count-num" id="cd-m">--</div><div class="count-label">წუთი</div></div>
+          <div class="count-tile"><div class="count-num" id="cd-s">--</div><div class="count-label">წამი</div></div>
+        </div>
+      </section>
+
+      <!-- Details -->
+      <section id="details">
+        <div class="section-head reveal"><div class="eyebrow">Details</div></div>
+        <div class="info-grid reveal">
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">📅</div>
+            <div class="card-label">თარიღი</div>
+            <div class="info-value">11 ოქტომბერი</div>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">📍</div>
+            <div class="card-label">ქალაქი</div>
+            <div class="info-value">ბათუმი</div>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">⏰</div>
+            <div class="card-label">დრო</div>
+            <div class="info-value">17:00</div>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">🤍</div>
+            <div class="card-label">Dress code</div>
+            <div class="info-value">Elegant Evening</div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Names -->
+      <section id="names" class="names-section">
+        <div class="reveal">
+          <div class="eyebrow">Together</div>
+          <p class="display-names">მონიკა<span class="amp">&amp;</span>თაზო</p>
+          <div class="divider"><span></span></div>
+        </div>
+      </section>
+
+      <!-- Gallery -->
+      <section id="gallery">
+        <div class="section-head reveal">
+          <div class="eyebrow">ფოტო გალერეა</div>
+          <h2>წამები, რომლებიც გვიყვარს</h2>
+        </div>
+
+        <div class="reveal">
+          <div class="gallery-stage" id="galleryStage">
+            <div class="g-card"><img src="assets/photos/1.jpg" alt="მონიკა და თაზო" loading="lazy"></div>
+            <div class="g-card"><img src="assets/photos/2.jpg" alt="მონიკა და თაზო" loading="lazy"></div>
+            <div class="g-card"><img src="assets/photos/3.jpg" alt="ნიშნობის საღამო" loading="lazy"></div>
+            <div class="g-card"><img src="assets/photos/4.jpg" alt="მონიკა და თაზო" loading="lazy"></div>
+            <div class="g-card"><img src="assets/photos/5.jpg" alt="მონიკა და თაზო" loading="lazy"></div>
+          </div>
+          <div class="gallery-dots" id="galleryDots" aria-hidden="true"></div>
+          <div class="gallery-hint" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5L8 12l6.5 7"/></svg>
+            <span>გადაფურცლე</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5L16 12l-6.5 7"/></svg>
+          </div>
+
+          <div class="gallery-grid">
+            <div class="g-item"><img src="assets/photos/1.jpg" alt="" loading="lazy"></div>
+            <div class="g-item"><img src="assets/photos/2.jpg" alt="" loading="lazy"></div>
+            <div class="g-item"><img src="assets/photos/3.jpg" alt="" loading="lazy"></div>
+            <div class="g-item"><img src="assets/photos/4.jpg" alt="" loading="lazy"></div>
+            <div class="g-item"><img src="assets/photos/5.jpg" alt="" loading="lazy"></div>
+            <div class="g-item"><img src="assets/batumi/wheel-paint.jpg" alt="ბათუმის ეშმაკის ბორბალი" loading="lazy"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Timeline -->
+      <section id="timeline">
+        <div class="section-head reveal">
+          <div class="eyebrow">Day Timeline</div>
+          <h2>დღის განრიგი</h2>
+        </div>
+        <div class="timeline">
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">17:00</div>
+            <h3 class="t-title">სტუმართა მიღება</h3>
+            <p class="t-desc">საღამოს მშვიდი დასაწყისი, მისალმებები და პირველი სადღეგრძელოები.</p>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">18:00</div>
+            <h3 class="t-title">ქორწინების ცერემონია</h3>
+            <p class="t-desc">სიყვარულის მთავარი სიტყვები და ჩვენი ყველაზე ამაღელვებელი წუთები.</p>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">19:00</div>
+            <h3 class="t-title">ფოტო სესია</h3>
+            <p class="t-desc">ზღვისპირა კადრები, ღიმილი და მოგონებები, რომლებიც სამუდამოდ დაგვრჩება.</p>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">20:00</div>
+            <h3 class="t-title">სადღესასწაულო ვახშამი</h3>
+            <p class="t-desc">გემრიელი სუფრა, მუსიკა და ბევრი ცეკვა ვარსკვლავიან ცაზე.</p>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">21:30</div>
+            <h3 class="t-title">ტორტის გაჭრა</h3>
+            <p class="t-desc">ტკბილი ფინალი, სურვილები და კიდევ ერთი ლამაზი მომენტი ერთად.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Location -->
+      <section id="location">
+        <div class="section-head reveal">
+          <div class="eyebrow">ლოკაცია</div>
+          <h2>სად შევხვდებით</h2>
+        </div>
+        <div class="loc-cards">
+          <article class="loc-card reveal">
+            <div class="loc-art">
+              <img src="assets/batumi/alinino-paint.jpg" alt="ალი და ნინო, ბათუმი" loading="lazy">
+              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Ali+and+Nino+Batumi" target="_blank" rel="noopener">
+                <span class="loc-badge">რუკაზე ნახვა</span>
+              </a>
+            </div>
+            <div class="loc-info">
+              <div class="loc-label">ცერემონია</div>
+              <div class="loc-time">18:00</div>
+              <div class="loc-name">ბათუმის ბულვარი</div>
+              <div class="loc-address">ალი და ნინო, ბათუმი</div>
+            </div>
+          </article>
+
+          <article class="loc-card reveal">
+            <div class="loc-art">
+              <img src="assets/batumi/wheel-paint.jpg" alt="ბათუმის ეშმაკის ბორბალი" loading="lazy">
+              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Batumi+Ferris+Wheel" target="_blank" rel="noopener">
+                <span class="loc-badge">რუკაზე ნახვა</span>
+              </a>
+            </div>
+            <div class="loc-info">
+              <div class="loc-label">სტუმრების მიღება</div>
+              <div class="loc-time">17:00</div>
+              <div class="loc-name">ზღვისპირა რესტორანი</div>
+              <div class="loc-address">ბათუმი, საქართველო</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Dress code -->
+      <section id="dresscode">
+        <div class="section-head reveal"><div class="eyebrow">დრეს-კოდი</div></div>
+        <div class="dress-art reveal"><img src="assets/photos/2.jpg" alt="" loading="lazy"></div>
+        <div class="dress-body reveal">
+          <p class="dress-line">მამაკაცები: მუქი საზეიმო კოსტიუმი</p>
+          <p class="dress-line">ქალბატონები: საღამოს კაბა</p>
+          <p class="dress-note">გთხოვთ, მოერიდოთ თეთრი ფერის ჩაცმას.</p>
+        </div>
+      </section>
+
+      <!-- RSVP -->
+      <section id="rsvp">
+        <div class="section-head reveal">
+          <div class="eyebrow">RSVP</div>
+          <h2>დაგვიდასტურეთ დასწრება</h2>
+        </div>
+        <div class="rsvp-card reveal">
+          <div id="rsvpFormWrap">
+            <form class="rsvp-form" id="rsvpForm" novalidate>
+              <div class="field" id="nameField">
+                <label class="input-label" for="guestName">სახელი და გვარი</label>
+                <input class="text-input" id="guestName" name="guestName" type="text" placeholder="სახელი და გვარი" autocomplete="name">
+              </div>
+
+              <div class="field">
+                <div class="counter-row">
+                  <div class="input-label">სტუმართა რაოდენობა</div>
+                  <div class="counter-controls">
+                    <button class="counter-btn" type="button" id="decreaseGuests" aria-label="შემცირება">−</button>
+                    <div class="guest-number" id="guestCount" aria-live="polite">1</div>
+                    <button class="counter-btn" type="button" id="increaseGuests" aria-label="გაზრდა">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field" id="attendanceField">
+                <div class="input-label">დასწრება</div>
+                <div class="attendance-row">
+                  <button class="attend-button" id="attendYes" type="button">✓ დიახ</button>
+                  <button class="attend-button" id="attendNo" type="button">✕ არა</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="input-label" for="guestMessage">შეტყობინება (არასავალდებულო)</label>
+                <textarea class="text-input" id="guestMessage" name="guestMessage" rows="3"></textarea>
+              </div>
+
+              <button class="submit-button" type="submit">გაგზავნა</button>
+              <div class="form-note">პასუხი შეინახება ორგანიზატორისთვის</div>
+            </form>
+          </div>
+
+          <div class="success-message" id="successMessage" aria-live="polite">
+            <div class="success-icon">🌸</div>
+            <h3 class="success-title">მადლობა</h3>
+            <p class="success-copy" id="successCopy"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq">
+        <div class="section-head reveal">
+          <div class="eyebrow">FAQ</div>
+          <h2>ხშირად დასმული კითხვები</h2>
+        </div>
+        <div class="reveal" id="faqList">
+          <div class="faq-item">
+            <button class="faq-q" type="button"><span>რა არის დრეს-კოდი?</span><span class="plus">+</span></button>
+            <div class="faq-a"><p>Elegant Evening — საღამოს ელეგანტური სტილი. მამაკაცებისთვის მუქი კოსტიუმი, ქალბატონებისთვის საღამოს კაბა.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q" type="button"><span>შემიძლია პარტნიორის მოყვანა?</span><span class="plus">+</span></button>
+            <div class="faq-a"><p>გთხოვთ, მიუთითოთ სტუმრების ჯამური რაოდენობა RSVP-ში.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q" type="button"><span>არის თუ არა პარკინგი ადგილზე?</span><span class="plus">+</span></button>
+            <div class="faq-a"><p>დიახ, ადგილზეა უფასო პარკინგი.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer reveal">
+        <div class="footer-script">Monica &amp; Tazo</div>
+        <div class="footer-date">11 October 2026 · Batumi</div>
+        <p class="footer-note">Made with love</p>
+      </footer>
+
+    </div>
+  </main>
+</div>
+
+<div class="petal-layer" id="petalLayer" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var root = document.documentElement;
+  var body = document.body;
+
+  /* ============================================================
+     1. OPENING GATE
+     ============================================================ */
+  var gate = document.getElementById("gate");
+  var gateStage = "closed";
+  root.classList.add("gate-lock");
+
+  function openGate(){
+    if(gateStage !== "closed") return;
+    gateStage = "opening";
+    var closed   = gate.querySelector(".gate-closed");
+    var initials = gate.querySelector(".gate-initials");
+    var portrait = gate.querySelector(".gate-portrait");
+
+    // Each step is one true crossfade: the leaving panel and the arriving
+    // panel move over the same duration, so there is no dead gap that would
+    // read as a hard cut between stages.
+    var T = REDUCED
+      ? {pause:40, cross:300, holdA:420, holdB:520, out:340}
+      : {pause:70, cross:700, holdA:1050, holdB:1200, out:1100};
+
+    setTimeout(function(){
+      closed.classList.remove("active"); closed.classList.add("leaving");
+      initials.classList.add("active");
+      setTimeout(function(){
+        initials.classList.remove("active"); initials.classList.add("leaving");
+        portrait.classList.add("active");
+        setTimeout(function(){
+          gate.classList.add("fade-out");
+          portrait.classList.add("settle");
+          setTimeout(function(){
+            gate.classList.add("hidden");
+            root.classList.remove("gate-lock");
+            gateStage = "done";
+            body.classList.add("opened");   // hero animations start here
+            onScroll();
+          }, T.out);
+        }, T.cross + T.holdB);
+      }, T.cross + T.holdA);
+    }, T.pause);
+  }
+
+  gate.addEventListener("click", openGate);
+  gate.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openGate(); }
+  });
+
+  /* ============================================================
+     2. DAY -> NIGHT
+     One scroll-driven value, `p`, drives every colour token plus the
+     sky, stars, sun and moon. Interpolating the tokens (rather than
+     swapping two themes) is what makes it dusk gradually.
+     ============================================================ */
+  var DAY = {
+    bg:[250,246,238], ink:[35,48,58], inkSoft:[85,103,111], inkFaint:[140,154,160],
+    accent:[47,110,126], rose:[192,138,114], gold:[184,137,75],
+    surface:[255,253,248], surfaceA:0.72,
+    surface2:[240,232,217], surface2A:0.80,
+    lineRGB:[35,48,58], lineA:0.16
+  };
+  var NIGHT = {
+    bg:[16,26,38], ink:[237,231,220], inkSoft:[185,196,203], inkFaint:[124,136,146],
+    accent:[145,197,205], rose:[227,180,154], gold:[216,182,120],
+    surface:[255,255,255], surfaceA:0.055,
+    surface2:[255,255,255], surface2A:0.085,
+    lineRGB:[237,231,220], lineA:0.14
+  };
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function mixRGB(a,b,t){
+    return "rgb(" + Math.round(lerp(a[0],b[0],t)) + "," +
+                    Math.round(lerp(a[1],b[1],t)) + "," +
+                    Math.round(lerp(a[2],b[2],t)) + ")";
+  }
+  function mixRGBA(ca,aa,cb,ab,t){
+    return "rgba(" + Math.round(lerp(ca[0],cb[0],t)) + "," +
+                     Math.round(lerp(ca[1],cb[1],t)) + "," +
+                     Math.round(lerp(ca[2],cb[2],t)) + "," +
+                     lerp(aa,ab,t).toFixed(3) + ")";
+  }
+
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  var sunEl  = document.getElementById("sun");
+  var moonEl = document.getElementById("moon");
+  var lastP = -1;
+
+  function clamp01(v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
+  function smooth(v){ v = clamp01(v); return v*v*(3 - 2*v); }
+
+  function applyPhase(p){
+    if(Math.abs(p - lastP) < 0.002) return;
+    lastP = p;
+
+    /* The sky dusks slowly across the whole scroll — that is the effect
+       being asked for. The INK cannot follow the same slow curve: a linear
+       fade from dark type to light type passes through mid-grey at exactly
+       the moment the sky is mid-grey too, and the page becomes unreadable
+       for several screens. So the ink crosses over quickly, in the middle
+       of the dusk, and `halo` blooms over just that crossing to carry the
+       text through it. */
+    var ink  = smooth((p - 0.46) / 0.08);
+    var halo = Math.max(0, 1 - Math.abs(p - 0.50) / 0.17);
+
+    var s = root.style;
+    s.setProperty("--night", p.toFixed(4));
+    s.setProperty("--bg",        mixRGB(DAY.bg, NIGHT.bg, p));
+    s.setProperty("--ink",       mixRGB(DAY.ink, NIGHT.ink, ink));
+    s.setProperty("--ink-soft",  mixRGB(DAY.inkSoft, NIGHT.inkSoft, ink));
+    s.setProperty("--ink-faint", mixRGB(DAY.inkFaint, NIGHT.inkFaint, ink));
+    s.setProperty("--accent",    mixRGB(DAY.accent, NIGHT.accent, ink));
+    s.setProperty("--rose",      mixRGB(DAY.rose, NIGHT.rose, ink));
+    s.setProperty("--gold",      mixRGB(DAY.gold, NIGHT.gold, ink));
+    s.setProperty("--surface",   mixRGBA(DAY.surface, DAY.surfaceA, NIGHT.surface, NIGHT.surfaceA, p));
+    s.setProperty("--surface-2", mixRGBA(DAY.surface2, DAY.surface2A, NIGHT.surface2, NIGHT.surface2A, p));
+    s.setProperty("--line",      mixRGBA(DAY.lineRGB, DAY.lineA, NIGHT.lineRGB, NIGHT.lineA, ink));
+    s.setProperty("--shadow", "0 18px 50px -24px rgba(" +
+      (p < .5 ? "24,40,52," + (0.40*(1-p)).toFixed(2) : "0,0,0," + (0.55*p).toFixed(2)) + ")");
+    s.setProperty("--text-halo", halo < 0.01 ? "none"
+      : "0 0 12px rgba(255,255,255," + (0.95*halo*(1-ink)).toFixed(3) + "), " +
+        "0 0 12px rgba(4,9,15,"       + (0.95*halo*ink).toFixed(3) + ")");
+    if(themeMeta) themeMeta.setAttribute("content", mixRGB(DAY.bg, NIGHT.bg, p));
+
+    // The sun sinks to the right and reddens; the moon climbs on the left.
+    if(sunEl){
+      sunEl.style.transform = "translate3d(" + (p*7).toFixed(2) + "vw," + (p*78).toFixed(2) + "vh,0) scale(" + (1 - p*0.15).toFixed(3) + ")";
+      sunEl.style.opacity = Math.max(0, 1 - p*1.45).toFixed(3);
+      sunEl.style.filter = "hue-rotate(" + (-p*22).toFixed(1) + "deg) saturate(" + (1 + p*0.5).toFixed(2) + ")";
+    }
+    if(moonEl){
+      moonEl.style.transform = "translate3d(0," + ((1-p)*72).toFixed(2) + "vh,0)";
+      moonEl.style.opacity = Math.max(0, (p - 0.35) / 0.5).toFixed(3);
+    }
+  }
+
+  /* ============================================================
+     3. STARFIELD — fixed to the viewport, drawn once, revealed by
+     the --night opacity above (no per-frame canvas work on scroll).
+     ============================================================ */
+  var canvas = document.getElementById("starfield");
+  var ctx = canvas.getContext("2d");
+  var stars = [];
+
+  function buildStars(){
+    var w = window.innerWidth, h = window.innerHeight;
+    var ratio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(w*ratio);
+    canvas.height = Math.floor(h*ratio);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+
+    stars.length = 0;
+    var count = Math.round(Math.min(220, (w*h)/5200));
+    for(var i=0;i<count;i++){
+      stars.push({
+        x: Math.random()*w,
+        y: Math.random()*h*0.86,
+        r: Math.random()*1.5 + 0.35,
+        a: Math.random()*0.7 + 0.25
+      });
+    }
+    ctx.clearRect(0,0,w,h);
+    for(var j=0;j<stars.length;j++){
+      var st = stars[j];
+      ctx.beginPath();
+      ctx.fillStyle = "rgba(233,240,248," + st.a + ")";
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  /* ============================================================
+     4. SCROLL
+     ============================================================ */
+  var heroParallax = document.getElementById("heroParallax");
+  var hero = document.getElementById("hero");
+  var heroContent = document.querySelector(".hero-content");
+  var ticking = false;
+
+  function nightProgress(){
+    var doc = document.documentElement;
+    var scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
+    // Full night is reached a little past halfway, so the last third of
+    // the page (schedule, RSVP, footer) is read under a settled night sky.
+    var t = Math.max(0, Math.min(1, (window.scrollY || window.pageYOffset) / (scrollable * 0.74)));
+    // Eased rather than linear, so the first screens stay convincingly
+    // daylit and the light drains faster once the sun is actually low.
+    return t*t*(3 - 2*t);
+  }
+
+  function updateHero(){
+    if(!heroParallax) return;
+    var y = window.scrollY || window.pageYOffset;
+    var h = hero.offsetHeight || window.innerHeight;
+    if(y > h * 1.2) return;               // hero is long gone; skip the work
+    heroParallax.style.transform = "translateY(" + (y*0.4) + "px)";
+    heroParallax.style.opacity = Math.max(0, 1 - y/(window.innerHeight*0.78));
+    if(heroContent && body.classList.contains("opened")){
+      var t = Math.max(0, Math.min(1, y/(h*0.72)));
+      heroContent.style.opacity = String(1 - t);
+      if(!REDUCED) heroContent.style.transform = "translateY(" + (t*24) + "px)";
+    }
+  }
+
+  /* Text that has already been read dissolves away above the fold — the
+     editorial fade from the reference invitation. Runs only on elements
+     that have finished their entrance (class added 850ms after reveal). */
+  function updateExitFade(){
+    if(REDUCED) return;
+    var vh = window.innerHeight;
+    var start = vh*0.14, end = -vh*0.40;
+    var els = document.querySelectorAll(".reveal.scroll-linked");
+    for(var i=0;i<els.length;i++){
+      var b = els[i].getBoundingClientRect().bottom;
+      var op = b >= start ? 1 : (b <= end ? 0 : (b - end)/(start - end));
+      els[i].style.opacity = String(Math.max(0, Math.min(1, op)));
+    }
+  }
+
+  function onScroll(){
+    if(ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function(){
+      applyPhase(nightProgress());
+      updateHero();
+      updateExitFade();
+      ticking = false;
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, {passive:true});
+  window.addEventListener("resize", function(){ buildStars(); lastP = -1; onScroll(); });
+
+  /* ============================================================
+     5. REVEAL
+     ============================================================ */
+  var revealObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(!en.isIntersecting) return;
+      en.target.classList.add("is-visible");
+      revealObserver.unobserve(en.target);
+      if(en.target.classList.contains("reveal")){
+        setTimeout(function(){ en.target.classList.add("scroll-linked"); }, 850);
+      }
+    });
+  }, {threshold:0.14, rootMargin:"0px 0px -6% 0px"});
+
+  document.querySelectorAll(".reveal").forEach(function(el){ revealObserver.observe(el); });
+
+  var tItems = document.querySelectorAll(".t-item");
+  var timelineObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(!en.isIntersecting) return;
+      var idx = Array.prototype.indexOf.call(tItems, en.target);
+      en.target.style.transitionDelay = (idx % 5) * 110 + "ms";
+      en.target.classList.add("is-visible");
+      timelineObserver.unobserve(en.target);
+    });
+  }, {threshold:0.2});
+  tItems.forEach(function(el){ timelineObserver.observe(el); });
+
+  /* ============================================================
+     6. COUNTDOWN — always in the venue's own timezone, so a guest
+     opening this from abroad sees the Batumi clock, not theirs.
+     ============================================================ */
+  var TARGET = new Date("2026-10-11T17:00:00+04:00").getTime();
+  var cd = {d:document.getElementById("cd-d"), h:document.getElementById("cd-h"),
+            m:document.getElementById("cd-m"), s:document.getElementById("cd-s")};
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+  function tickCountdown(){
+    var diff = TARGET - Date.now();
+    if(diff <= 0){ cd.d.textContent = cd.h.textContent = cd.m.textContent = cd.s.textContent = "00"; return; }
+    var sec = Math.floor(diff/1000);
+    cd.d.textContent = pad(Math.floor(sec/86400));
+    cd.h.textContent = pad(Math.floor(sec/3600) % 24);
+    cd.m.textContent = pad(Math.floor(sec/60) % 60);
+    cd.s.textContent = pad(sec % 60);
+  }
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
+
+  /* ============================================================
+     7. GALLERY DECK — script owns the horizontal gesture so a swipe
+     of any speed advances exactly one photo, which native momentum
+     scrolling cannot guarantee.
+     ============================================================ */
+  (function initDeck(){
+    var stage = document.getElementById("galleryStage");
+    if(!stage) return;
+    var cards = Array.prototype.slice.call(stage.querySelectorAll(".g-card"));
+    var dotsWrap = document.getElementById("galleryDots");
+    var n = cards.length;
+    var top = 0;
+    var dragging = false, startX = 0, startY = 0, dx = 0, locked = null;
+
+    cards.forEach(function(){ var i = document.createElement("i"); dotsWrap.appendChild(i); });
+    var dots = Array.prototype.slice.call(dotsWrap.children);
+
+    function layout(dragOffset){
+      for(var i=0;i<n;i++){
+        var depth = (i - top + n) % n;          // 0 = front card
+        var card = cards[i];
+        if(depth > 2){ card.style.opacity = "0"; card.style.pointerEvents = "none"; card.style.zIndex = "0"; continue; }
+        var off = (depth === 0 ? (dragOffset||0) : 0);
+        var rot = depth === 0 ? off/26 : (depth === 1 ? 2.4 : -2.0);
+        var scale = 1 - depth*0.05;
+        var lift = depth*10;
+        card.style.zIndex = String(10 - depth);
+        card.style.opacity = depth === 0 ? "1" : (depth === 1 ? "0.85" : "0.6");
+        card.style.pointerEvents = depth === 0 ? "auto" : "none";
+        card.style.transition = dragging ? "none" : "transform .42s cubic-bezier(.2,.7,.3,1), opacity .42s ease";
+        card.style.transform = "translate3d(" + off + "px," + lift + "px,0) rotate(" + rot + "deg) scale(" + scale + ")";
+      }
+      dots.forEach(function(d,i){ d.classList.toggle("on", i === top); });
+    }
+
+    function advance(dir){
+      top = (top + dir + n) % n;
+      layout(0);
+    }
+
+    stage.addEventListener("pointerdown", function(e){
+      dragging = true; locked = null; dx = 0;
+      startX = e.clientX; startY = e.clientY;
+      stage.setPointerCapture(e.pointerId);
+    });
+    stage.addEventListener("pointermove", function(e){
+      if(!dragging) return;
+      var mx = e.clientX - startX, my = e.clientY - startY;
+      if(locked === null){
+        if(Math.abs(mx) < 6 && Math.abs(my) < 6) return;
+        locked = Math.abs(mx) > Math.abs(my) ? "x" : "y";
+      }
+      if(locked !== "x") return;               // vertical stays the page's
+      e.preventDefault();
+      dx = mx;
+      layout(dx);
+    });
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      if(locked === "x" && Math.abs(dx) > 55) advance(dx < 0 ? 1 : -1);
+      else layout(0);
+      dx = 0; locked = null;
+    }
+    stage.addEventListener("pointerup", endDrag);
+    stage.addEventListener("pointercancel", endDrag);
+    stage.addEventListener("click", function(){ if(locked === null) advance(1); });
+
+    layout(0);
+  })();
+
+  /* ============================================================
+     8. RSVP
+     ============================================================ */
+  var guestNameInput = document.getElementById("guestName");
+  var guestCountEl   = document.getElementById("guestCount");
+  var attendanceField= document.getElementById("attendanceField");
+  var nameField      = document.getElementById("nameField");
+  var attendYes      = document.getElementById("attendYes");
+  var attendNo       = document.getElementById("attendNo");
+  var rsvpForm       = document.getElementById("rsvpForm");
+  var rsvpFormWrap   = document.getElementById("rsvpFormWrap");
+  var successMessage = document.getElementById("successMessage");
+  var successCopy    = document.getElementById("successCopy");
+  var petalLayer     = document.getElementById("petalLayer");
+
+  var guests = 1, attendance = "";
+
+  document.getElementById("decreaseGuests").addEventListener("click", function(){
+    guests = Math.max(1, guests - 1); guestCountEl.textContent = guests;
+  });
+  document.getElementById("increaseGuests").addEventListener("click", function(){
+    guests = Math.min(20, guests + 1); guestCountEl.textContent = guests;
+  });
+  function setAttendance(v){
+    attendance = v;
+    attendYes.classList.toggle("active-yes", v === "yes");
+    attendNo.classList.toggle("active-no",  v === "no");
+    attendanceField.classList.remove("invalid");
+  }
+  attendYes.addEventListener("click", function(){ setAttendance("yes"); });
+  attendNo.addEventListener("click", function(){ setAttendance("no"); });
+
+  function pulseInvalid(el){
+    el.classList.add("invalid");
+    setTimeout(function(){ el.classList.remove("invalid"); }, 900);
+  }
+
+  var PETAL_COLORS = ["rgba(255,205,196,.92)","rgba(233,214,190,.9)","rgba(198,226,229,.9)","rgba(240,224,236,.9)"];
+  function createPetals(){
+    for(var i=0;i<20;i++){
+      (function(){
+        var petal = document.createElement("div");
+        petal.className = "petal";
+        petal.style.left = (Math.random()*100) + "vw";
+        petal.style.background = PETAL_COLORS[Math.floor(Math.random()*PETAL_COLORS.length)];
+        petal.style.animationDuration = (5.6 + Math.random()*2.4) + "s";
+        petal.style.animationDelay = (Math.random()*0.6) + "s";
+        petal.style.setProperty("--drift", (-60 + Math.random()*120) + "px");
+        petalLayer.appendChild(petal);
+        setTimeout(function(){ petal.remove(); }, 8600);
+      })();
+    }
+  }
+
+  rsvpForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var name = guestNameInput.value.trim();
+    var ok = true;
+    if(!name){ pulseInvalid(nameField); ok = false; }
+    if(!attendance){ pulseInvalid(attendanceField); ok = false; }
+    if(!ok) return;
+
+    // MVP: the answer is kept on the guest's own device. Swapping this for
+    // a real endpoint is a single fetch() here — nothing else changes.
+    try{
+      localStorage.setItem("rsvp_monika_tazo", JSON.stringify({
+        name: name, guests: guests, attendance: attendance,
+        message: document.getElementById("guestMessage").value.trim(),
+        at: new Date().toISOString()
+      }));
+    }catch(err){ /* private mode — the confirmation below still shows */ }
+
+    rsvpFormWrap.style.display = "none";
+    successMessage.classList.add("show");
+    successCopy.textContent = attendance === "yes"
+      ? "ძალიან გვიხარია, " + name + ", რომ " + guests + " სტუმართან ერთად ჩვენს დღეს გაგვიზიარებთ."
+      : "მადლობა, " + name + ". თქვენი პასუხი მივიღეთ და მთელი გულით ვგრძნობთ თქვენს სითბოს ამ დღისთვის.";
+    if(attendance === "yes") createPetals();
+  });
+
+  /* ============================================================
+     9. FAQ
+     ============================================================ */
+  document.querySelectorAll(".faq-q").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      btn.parentElement.classList.toggle("open");
+    });
+  });
+
+  /* ============================================================
+     10. BOOT
+     ============================================================ */
+  buildStars();
+  applyPhase(0);
+  onScroll();
+
+  if(REDUCED){
+    // No cinematic wait for anyone who has asked for less motion.
+    body.classList.add("opened");
+  }
+})();
+</script>
+</body>
+</html>
