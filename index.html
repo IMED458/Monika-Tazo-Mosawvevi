@@ -10,6 +10,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Great+Vibes&family=Noto+Sans+Georgian:wght@300;400;500;600&family=Noto+Serif+Georgian:wght@300;400;500;600&display=swap">
 <style>
+@font-face{
+  font-family:"DM Elene Akhvlediani";
+  src:url("assets/fonts/dm-elene-akhvlediani.ttf") format("truetype");
+  unicode-range:U+10A0-10FF,U+1C90-1CBF,U+2D00-2D2F;
+  font-weight:400;font-style:normal;font-display:swap;
+}
 /* ============================================================
    TOKENS
    The day and night values below are only the two ENDPOINTS.
@@ -36,7 +42,7 @@
   --radius-sm:12px;
   --maxw:1060px;
 
-  --font-display:"Noto Serif Georgian","Cormorant Garamond",Georgia,serif;
+  --font-display:"DM Elene Akhvlediani","Noto Serif Georgian","Cormorant Garamond",Georgia,serif;
   --font-body:"Noto Sans Georgian","Montserrat",-apple-system,"Segoe UI",sans-serif;
   --font-script:"Great Vibes","Cormorant Garamond",cursive;
 
@@ -163,7 +169,7 @@ body.opened .sun-core{animation:sunEntrance 1.6s cubic-bezier(.2,.9,.2,1) .35s f
 
 section{padding:clamp(60px,9vw,104px) 0;position:relative;}
 .section-head{max-width:620px;margin:0 auto 42px;text-align:center;}
-.section-head h2{font-size:clamp(1.9rem,6.5vw,2.8rem);line-height:1.15;margin-top:12px;}
+.section-head h2{font-size:clamp(1.95rem,6.6vw,2.85rem);line-height:1.3;margin-top:12px;}
 .section-head p{color:var(--ink-soft);margin-top:14px;}
 
 /* Reveal in, then dissolve out again once scrolled past — the same
@@ -218,8 +224,8 @@ html.gate-lock,html.gate-lock body{overflow:hidden;height:100%;}
 @keyframes tapPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
 .gate-monogram{
   display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:.22em;
-  font-family:var(--font-display);font-size:clamp(2.2rem,11vw,4rem);
-  color:var(--g-ink);max-width:90vw;line-height:1.1;
+  font-family:var(--font-display);font-size:clamp(2.3rem,11.5vw,4.1rem);
+  color:var(--g-ink);max-width:90vw;line-height:1.3;
 }
 .gate-amp{font-family:var(--font-script);font-size:.9em;color:var(--g-gold);padding:0 .06em;}
 .gate-portrait img{
@@ -371,7 +377,7 @@ body.opened .batumi-scene{opacity:1;transform:none;}
   position:relative;z-index:3;width:min(100%,720px);text-align:center;
   padding:18vh 0 14vh;
   opacity:0;transform:translateY(26px) scale(.985);
-  transition:opacity 1.2s ease 3.5s,transform 1.2s ease 3.5s;
+  transition:opacity 1.2s ease 1.8s,transform 1.2s ease 1.8s;
 }
 body.opened .hero-content{opacity:1;transform:none;}
 .hero-eyebrow{
@@ -381,7 +387,7 @@ body.opened .hero-content{opacity:1;transform:none;}
 }
 .hero-title{
   font-family:var(--font-display);font-weight:400;
-  font-size:clamp(2.6rem,11vw,5.4rem);line-height:1.06;letter-spacing:.005em;
+  font-size:clamp(2.5rem,10.5vw,5.1rem);line-height:1.22;letter-spacing:.005em;
   color:var(--ink);
   text-shadow:0 12px 34px rgba(18,32,44,.14);
 }
@@ -395,7 +401,7 @@ body.opened .hero-content{opacity:1;transform:none;}
   position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:3;
   display:grid;justify-items:center;gap:10px;color:var(--ink-soft);opacity:0;
 }
-body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 4.2s both;}
+body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 2.6s both;}
 .scroll-line{width:1px;height:58px;transform-origin:top;
   background:linear-gradient(to bottom,transparent,currentColor,transparent);
   animation:scrollLine 2.5s ease-in-out infinite;}
@@ -412,7 +418,7 @@ body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 4.2s both;}
 .invite-copy + .invite-copy{margin-top:16px;}
 .invite-quote{
   font-family:var(--font-display);font-style:italic;font-weight:300;
-  font-size:clamp(1.3rem,5.4vw,1.7rem);line-height:1.55;color:var(--ink);
+  font-size:clamp(1.35rem,5.6vw,1.75rem);line-height:1.7;color:var(--ink);
   text-align:center;
 }
 .invite-cite{display:block;margin-top:20px;font-family:var(--font-script);font-size:1.9rem;color:var(--rose);text-align:center;}
@@ -439,11 +445,11 @@ body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 4.2s both;}
 .card:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
 .card-icon{font-size:1.4rem;line-height:1;}
 .card-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);}
-.info-value{font-family:var(--font-display);font-size:clamp(1.15rem,4.6vw,1.5rem);line-height:1.2;}
+.info-value{font-family:var(--font-display);font-size:clamp(1.2rem,4.8vw,1.55rem);line-height:1.35;}
 
 /* Names */
 .names-section{text-align:center;}
-.display-names{font-family:var(--font-display);font-size:clamp(2.4rem,11vw,4rem);line-height:1.08;}
+.display-names{font-family:var(--font-display);font-size:clamp(2.3rem,10.5vw,3.8rem);line-height:1.25;}
 .display-names .amp{font-family:var(--font-script);color:var(--gold);margin:0 .14em;display:inline-block;}
 
 /* Gallery — a swipeable deck of prints on phones, a grid on desktop. */
@@ -482,7 +488,7 @@ body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 4.2s both;}
 .t-dot{position:absolute;left:-25px;top:9px;width:13px;height:13px;border-radius:50%;
   background:var(--accent);box-shadow:0 0 0 3px var(--bg),0 0 16px color-mix(in srgb,var(--accent) 65%,transparent);}
 .t-time{font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
-.t-title{font-family:var(--font-display);font-size:clamp(1.3rem,5.4vw,1.7rem);line-height:1.2;}
+.t-title{font-family:var(--font-display);font-size:clamp(1.35rem,5.6vw,1.75rem);line-height:1.32;}
 .t-desc{margin-top:6px;color:var(--ink-soft);font-size:.92rem;line-height:1.75;}
 
 /* Location */
@@ -508,7 +514,7 @@ body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 4.2s both;}
 .loc-info{padding:20px 22px 24px;border-top:1px solid var(--line);text-align:center;}
 .loc-label{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
 .loc-time{font-family:var(--font-display);font-size:1.6rem;color:var(--gold);font-variant-numeric:tabular-nums;}
-.loc-name{font-family:var(--font-display);font-size:1.32rem;margin-top:2px;}
+.loc-name{font-family:var(--font-display);font-size:1.4rem;line-height:1.35;margin-top:2px;}
 .loc-address{margin-top:6px;color:var(--ink-soft);font-size:.9rem;}
 
 /* Dress code */
@@ -587,7 +593,7 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
 }
 .success-message.show .success-icon{animation:iconPop .85s cubic-bezier(.18,1.35,.42,1) forwards;}
 @keyframes iconPop{0%{transform:scale(0);}60%{transform:scale(1.12);}100%{transform:scale(1);}}
-.success-title{font-family:var(--font-display);font-size:clamp(1.9rem,8vw,2.6rem);margin-bottom:8px;}
+.success-title{font-family:var(--font-display);font-size:clamp(1.95rem,8vw,2.65rem);line-height:1.3;margin-bottom:8px;}
 .success-copy{color:var(--ink-soft);line-height:1.85;}
 
 /* FAQ */
