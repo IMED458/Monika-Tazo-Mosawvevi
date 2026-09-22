@@ -1169,45 +1169,75 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
     musicBtn.setAttribute("aria-label", on ? "მუსიკის გამორთვა" : "მუსიკის ჩართვა");
   }
 
-  /* Coming in at full volume under the opening is jarring; the track
-     should arrive the way the page does. */
-  function fadeVolume(to, ms){
-    if(fadeTimer) clearInterval(fadeTimer);
+  /* Coming in at full volume under the opening is jarring; the track should
+     arrive the way the page does. `done` fires when the ramp actually
+     finishes, and a new fade cancels both the old ramp AND its callback —
+     so a pause scheduled by a fade that got superseded can never land on
+     top of playback the guest has since asked for. */
+  function fadeVolume(to, ms, done){
+    if(fadeTimer){ clearInterval(fadeTimer.id); fadeTimer = null; }
     var from = music.volume, steps = Math.max(1, Math.round(ms/50)), i = 0;
-    fadeTimer = setInterval(function(){
+    var token = {};
+    token.id = setInterval(function(){
       i++;
       music.volume = Math.max(0, Math.min(1, from + (to - from) * (i/steps)));
-      if(i >= steps){ clearInterval(fadeTimer); fadeTimer = null; }
+      if(i >= steps){
+        clearInterval(token.id);
+        if(fadeTimer === token){ fadeTimer = null; if(done) done(); }
+      }
     }, 50);
+    fadeTimer = token;
+  }
+
+  /* The icon follows the ELEMENT's own play/pause events rather than a
+     variable we maintain alongside it. play() hands back a promise that can
+     reject or resolve out of order when the control is tapped quickly, and
+     anything we bookkeep by hand drifts out of step with what is actually
+     audible. These two events cannot drift — they are the audio's own
+     account of itself. */
+  music.addEventListener("play",  function(){ paintMusicBtn(true); });
+  music.addEventListener("pause", function(){ paintMusicBtn(false); });
+
+  function playMusic(fadeMs){
+    music.volume = 0;
+    fadeVolume(VOLUME, fadeMs);
+    var p = music.play();
+    if(p && p.catch){
+      p.catch(function(){
+        // A play() right after a pause() can be aborted; one retry on the
+        // next tick is enough, and if it still refuses the pause event has
+        // already left the control showing as off.
+        setTimeout(function(){
+          if(!music.paused) return;
+          var q = music.play();
+          if(q && q.catch) q.catch(function(){});
+        }, 60);
+      });
+    }
+  }
+
+  /* Stopping is synchronous and unconditional. It used to fade out and
+     pause from the fade's completion callback, which made silence depend on
+     a JS interval running to the end — and a throttled tab (the guest
+     switches apps, the phone locks) stretches those intervals, so the
+     control went visibly off while the track kept playing. Someone pressing
+     mute wants silence now, not in 380ms. */
+  function stopMusic(){
+    if(fadeTimer){ clearInterval(fadeTimer.id); fadeTimer = null; }
+    music.pause();
   }
 
   function startMusic(){
-    if(!musicWanted()){ paintMusicBtn(false); return; }
-    music.volume = 0;
-    var p = music.play();
-    if(p && p.catch){
-      p.then(function(){ fadeVolume(VOLUME, 2200); })
-       .catch(function(){ paintMusicBtn(false); });   // blocked: let them tap it on
-    }else{
-      fadeVolume(VOLUME, 2200);
-    }
+    if(!musicWanted()) return;     // they turned it off on an earlier visit
+    playMusic(2200);
   }
 
   musicBtn.addEventListener("click", function(){
-    if(music.paused){
-      music.volume = 0;
-      var p = music.play();
-      if(p && p.catch) p.catch(function(){});
-      fadeVolume(VOLUME, 700);
-      paintMusicBtn(true); rememberMusic(true);
-    }else{
-      fadeVolume(0, 400);
-      setTimeout(function(){ if(music.volume === 0) music.pause(); }, 460);
-      paintMusicBtn(false); rememberMusic(false);
-    }
+    if(music.paused){ rememberMusic(true);  playMusic(700); }
+    else            { rememberMusic(false); stopMusic(); }
   });
 
-  paintMusicBtn(musicWanted());
+  paintMusicBtn(false);            // corrected the moment audio actually starts
 
   /* ============================================================
      2. DAY -> NIGHT
