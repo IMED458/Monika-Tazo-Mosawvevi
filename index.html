@@ -260,6 +260,34 @@ html.gate-lock,html.gate-lock body{overflow:hidden;height:100%;}
 }
 
 /* ============================================================
+   SOUND
+   ============================================================ */
+.music-btn{
+  position:fixed;z-index:60;
+  top:calc(14px + env(safe-area-inset-top,0px));right:14px;
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:var(--shadow);
+  /* Hidden behind the gate — it only means anything once the page is open. */
+  opacity:0;pointer-events:none;
+  transition:opacity .6s ease,transform .3s cubic-bezier(.34,1.56,.64,1),
+             background-color .5s linear,color .5s linear,border-color .5s linear;
+}
+body.opened .music-btn{opacity:1;pointer-events:auto;}
+/* Dimmed while the guest is actively scrolling so it stops competing with
+   the photographs going past — still tappable, and it settles back a
+   moment after the page stops moving. */
+body.opened .music-btn.dim{opacity:.38;}
+.music-btn:active{transform:scale(.9);}
+.music-btn svg{width:20px;height:20px;}
+.music-btn .icon-off{display:none;}
+.music-btn.is-off .icon-on{display:none;}
+.music-btn.is-off .icon-off{display:block;}
+@media (prefers-reduced-motion:reduce){ .music-btn{transition:opacity .2s ease;} body.opened .music-btn.dim{opacity:1;} }
+
+/* ============================================================
    HERO — the Batumi seafront wakes up: clouds part, a ship
    crosses, birds pass, the skyline and sea settle in.
    ============================================================ */
@@ -1044,6 +1072,20 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
   </main>
 </div>
 
+<audio id="music" src="assets/audio/tango.mp3" loop preload="auto"></audio>
+<button class="music-btn" id="musicBtn" type="button" aria-label="მუსიკის გამორთვა" aria-pressed="true">
+  <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/>
+    <path d="M16 9.4a3.6 3.6 0 0 1 0 5.2"/>
+    <path d="M18.6 6.8a7.2 7.2 0 0 1 0 10.4"/>
+  </svg>
+  <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/>
+    <path d="M16.5 10l4 4"/>
+    <path d="M20.5 10l-4 4"/>
+  </svg>
+</button>
+
 <div class="petal-layer" id="petalLayer" aria-hidden="true"></div>
 
 <script>
@@ -1064,6 +1106,7 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
   function openGate(){
     if(gateStage !== "closed") return;
     gateStage = "opening";
+    startMusic();
     var closed   = gate.querySelector(".gate-closed");
     var initials = gate.querySelector(".gate-initials");
     var portrait = gate.querySelector(".gate-portrait");
@@ -1100,6 +1143,71 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
   gate.addEventListener("keydown", function(e){
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openGate(); }
   });
+
+  /* ============================================================
+     1b. SOUND
+     Browsers refuse audio until the visitor has actually interacted, so
+     playback is started from inside the gate's own click handler — that
+     tap is the gesture that buys us permission. Nothing starts before it.
+     ============================================================ */
+  var music = document.getElementById("music");
+  var musicBtn = document.getElementById("musicBtn");
+  var MUSIC_KEY = "mt_music_off";
+  var VOLUME = 0.55;
+  var fadeTimer = null;
+
+  function musicWanted(){
+    try{ return localStorage.getItem(MUSIC_KEY) !== "1"; }
+    catch(e){ return true; }   // private mode: just play
+  }
+  function rememberMusic(on){
+    try{ localStorage.setItem(MUSIC_KEY, on ? "0" : "1"); }catch(e){}
+  }
+  function paintMusicBtn(on){
+    musicBtn.classList.toggle("is-off", !on);
+    musicBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    musicBtn.setAttribute("aria-label", on ? "მუსიკის გამორთვა" : "მუსიკის ჩართვა");
+  }
+
+  /* Coming in at full volume under the opening is jarring; the track
+     should arrive the way the page does. */
+  function fadeVolume(to, ms){
+    if(fadeTimer) clearInterval(fadeTimer);
+    var from = music.volume, steps = Math.max(1, Math.round(ms/50)), i = 0;
+    fadeTimer = setInterval(function(){
+      i++;
+      music.volume = Math.max(0, Math.min(1, from + (to - from) * (i/steps)));
+      if(i >= steps){ clearInterval(fadeTimer); fadeTimer = null; }
+    }, 50);
+  }
+
+  function startMusic(){
+    if(!musicWanted()){ paintMusicBtn(false); return; }
+    music.volume = 0;
+    var p = music.play();
+    if(p && p.catch){
+      p.then(function(){ fadeVolume(VOLUME, 2200); })
+       .catch(function(){ paintMusicBtn(false); });   // blocked: let them tap it on
+    }else{
+      fadeVolume(VOLUME, 2200);
+    }
+  }
+
+  musicBtn.addEventListener("click", function(){
+    if(music.paused){
+      music.volume = 0;
+      var p = music.play();
+      if(p && p.catch) p.catch(function(){});
+      fadeVolume(VOLUME, 700);
+      paintMusicBtn(true); rememberMusic(true);
+    }else{
+      fadeVolume(0, 400);
+      setTimeout(function(){ if(music.volume === 0) music.pause(); }, 460);
+      paintMusicBtn(false); rememberMusic(false);
+    }
+  });
+
+  paintMusicBtn(musicWanted());
 
   /* ============================================================
      2. DAY -> NIGHT
@@ -1285,6 +1393,17 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
   }
 
   window.addEventListener("scroll", onScroll, {passive:true});
+
+  /* The sound control fades back while the page is moving and settles
+     again shortly after it stops. */
+  (function dimWhileScrolling(){
+    var t = null;
+    window.addEventListener("scroll", function(){
+      musicBtn.classList.add("dim");
+      if(t) clearTimeout(t);
+      t = setTimeout(function(){ musicBtn.classList.remove("dim"); }, 900);
+    }, {passive:true});
+  })();
   window.addEventListener("resize", function(){ buildStars(); lastP = -1; onScroll(); });
 
   /* ============================================================

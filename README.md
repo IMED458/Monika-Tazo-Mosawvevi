@@ -11,6 +11,8 @@
 index.html              მთელი გვერდი (HTML + CSS + JS)
 assets/photos/1..5.jpg  წყვილის ფოტოები
 assets/batumi/          ბათუმის ნახატისებრი ილუსტრაციები
+assets/audio/tango.mp3  ფონური მუსიკა
+assets/og.jpg           ლინკის preview (Messenger/Instagram)
 ```
 
 ## რა სად შევცვალო
