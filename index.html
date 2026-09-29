@@ -480,18 +480,25 @@ body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 2.6s both;}
 .count-num{font-family:var(--font-display);font-size:clamp(1.6rem,6vw,2.3rem);color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1;}
 .count-label{margin-top:4px;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);}
 
-/* Detail cards */
-.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
-.card{
-  padding:20px 18px;min-height:152px;display:grid;align-content:space-between;gap:10px;
-  border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow);
-  transition:transform .35s ease,border-color .35s ease;
+/* Detail cards: one panel, four cells split by hairlines */
+.info-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;
+  border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);
+  background:var(--line);box-shadow:var(--shadow);
 }
-.card:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
-.card-icon{font-size:1.4rem;line-height:1;}
-.card-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);}
-.info-value{font-family:var(--font-display);font-size:clamp(1.2rem,4.8vw,1.55rem);line-height:1.35;}
+.card{
+  padding:24px 14px 22px;display:grid;justify-items:center;align-content:start;gap:6px;text-align:center;
+  background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.card-icon{
+  width:42px;height:42px;margin-bottom:6px;border-radius:50%;display:grid;place-items:center;
+  color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);
+  background:color-mix(in srgb,var(--gold) 9%,transparent);
+}
+.card-icon svg{width:20px;height:20px;}
+.card-label{font-size:.78rem;letter-spacing:.06em;color:var(--ink-soft);}
+.info-value{font-size:clamp(1.12rem,4.6vw,1.3rem);font-weight:600;line-height:1.3;color:var(--ink);font-variant-numeric:tabular-nums;}
+.info-sub{font-size:.8rem;color:var(--ink-soft);line-height:1.4;}
 
 /* Names */
 .names-section{text-align:center;}
@@ -658,7 +665,6 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
 .footer-note{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-faint);}
 
 @media (min-width:560px){ .content{width:min(100%,600px);} }
-@media (max-width:420px){ .info-grid{grid-template-columns:1fr;} }
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;}
@@ -824,27 +830,31 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
 
       <!-- Details -->
       <section id="details">
-        <div class="section-head reveal"><div class="eyebrow">Details</div></div>
+        <div class="section-head reveal"><div class="eyebrow">დეტალები</div></div>
         <div class="info-grid reveal">
           <article class="card">
-            <div class="card-icon" aria-hidden="true">📅</div>
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></div>
             <div class="card-label">თარიღი</div>
             <div class="info-value">09 ოქტომბერი</div>
+            <div class="info-sub">პარასკევი, 2026</div>
           </article>
           <article class="card">
-            <div class="card-icon" aria-hidden="true">📍</div>
-            <div class="card-label">ქალაქი</div>
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></div>
+            <div class="card-label">ადგილი</div>
             <div class="info-value">ბათუმი</div>
+            <div class="info-sub">აჭარა</div>
           </article>
           <article class="card">
-            <div class="card-icon" aria-hidden="true">⏰</div>
-            <div class="card-label">დრო</div>
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div>
+            <div class="card-label">დასაწყისი</div>
             <div class="info-value">11:00</div>
+            <div class="info-sub">ხელის მოწერა</div>
           </article>
           <article class="card">
-            <div class="card-icon" aria-hidden="true">🥂</div>
-            <div class="card-label">რესტორანი</div>
-            <div class="info-value">„ლიდერი“</div>
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h5l-.6 6.2a2 2 0 0 1-3.8 0zM10.5 11.5V20M8 20h5M16 3h3l-.4 4.5"/><path d="M17.5 8v12M15.5 20h4"/></svg></div>
+            <div class="card-label">სტუმრების მიღება</div>
+            <div class="info-value">18:00</div>
+            <div class="info-sub">რესტორანი „ლიდერი“</div>
           </article>
         </div>
       </section>
