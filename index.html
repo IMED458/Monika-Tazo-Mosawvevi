@@ -206,10 +206,10 @@ html.gate-lock,html.gate-lock body{overflow:hidden;height:100%;}
 #gate{
   /* Fixed warm palette on purpose: the opening card always reads as a
      printed invitation, it never follows the page's day/night state. */
-  --g-bg:#FBF7EE; --g-ink:#23303A; --g-soft:#5B6B73; --g-gold:#B8894B;
+  --g-bg:#F7F2E8; --g-ink:#23303A; --g-soft:#5B6B73; --g-gold:#B8894B;
   position:fixed;inset:0;z-index:500;
   display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 50% 38%,rgba(47,110,126,.10),transparent 62%),var(--g-bg);
+  background:var(--g-bg);
   cursor:pointer;
   transition:opacity 1.15s cubic-bezier(.22,.6,.14,1);
 }
@@ -225,15 +225,18 @@ html.gate-lock,html.gate-lock body{overflow:hidden;height:100%;}
 .gate-panel.active{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
 .gate-panel.leaving{opacity:0;transform:scale(1.03) translateY(-8px);}
 
-.gate-plate{
-  width:min(80vw,380px);border-radius:999px 999px 18px 18px;overflow:hidden;
-  box-shadow:0 26px 60px -26px rgba(24,40,52,.45);
-  border:1px solid rgba(35,48,58,.12);
+/* The opening card is the couple's painted save-the-date, shown whole.
+   Its printed date was cleared from the image and is set here instead. */
+.gate-closed{padding:0 0 max(18px,env(safe-area-inset-bottom));gap:12px;}
+.gate-card{
+  position:relative;container-type:inline-size;
+  width:min(100vw,480px,calc((100svh - 64px)*2/3));aspect-ratio:1024/1536;
 }
-.gate-plate img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;}
-.gate-city{
-  font-family:var(--font-display);font-size:.78rem;letter-spacing:.34em;
-  text-transform:uppercase;color:var(--g-gold);
+.gate-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.gate-date{
+  position:absolute;left:0;right:0;top:6.45%;transform:translateY(-50%);
+  font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;
+  font-size:4.1cqw;letter-spacing:.42em;padding-left:.42em;color:#9A7342;
 }
 .gate-tap{
   font-family:var(--font-body);font-size:.95rem;letter-spacing:.06em;color:var(--g-soft);
@@ -676,11 +679,13 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
 <body>
 
 <!-- ======================= OPENING GATE ======================= -->
-<div id="gate" role="button" tabindex="0" aria-label="შეეხეთ დასაწყებად">
+<div id="gate" role="button" tabindex="0" aria-label="შეეხეთ გასახსნელად">
   <div class="gate-panel gate-closed active">
-    <div class="gate-city">ბათუმი · 2026</div>
-    <div class="gate-plate"><img src="assets/batumi/gate-plate.jpg" alt=""></div>
-    <div class="gate-tap">შეეხეთ დასაწყებად</div>
+    <div class="gate-card">
+      <img src="assets/batumi/gate-card.jpg" alt="მონიკა და თაზო — Save our date">
+      <div class="gate-date">09 . 10 . 2026</div>
+    </div>
+    <div class="gate-tap">შეეხეთ გასახსნელად</div>
   </div>
   <div class="gate-panel gate-initials">
     <div class="gate-monogram"><span>მონიკა</span><span class="gate-amp">&amp;</span><span>თაზო</span></div>
