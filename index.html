@@ -643,18 +643,6 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
 .success-title{font-family:var(--font-display);font-size:clamp(1.95rem,8vw,2.65rem);line-height:1.3;margin-bottom:8px;}
 .success-copy{color:var(--ink-soft);line-height:1.85;}
 
-/* FAQ */
-.faq-item{border-bottom:1px solid var(--line);}
-.faq-q{
-  width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;
-  padding:18px 2px;background:none;border:0;text-align:left;font-size:.98rem;color:var(--ink);
-}
-.faq-q .plus{color:var(--accent);font-size:1.25rem;line-height:1;transition:transform .3s ease;}
-.faq-item.open .faq-q .plus{transform:rotate(45deg);}
-.faq-a{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.2,.7,.3,1);}
-.faq-item.open .faq-a{max-height:320px;}
-.faq-a p{padding:0 2px 18px;color:var(--ink-soft);font-size:.93rem;line-height:1.8;}
-
 /* Petals on a confirmed RSVP */
 .petal-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30;}
 .petal{position:fixed;top:-40px;width:15px;height:21px;border-radius:70% 30% 65% 35%;opacity:.9;
@@ -1033,24 +1021,6 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
             <div class="success-icon">🌸</div>
             <h3 class="success-title">მადლობა</h3>
             <p class="success-copy" id="successCopy"></p>
-          </div>
-        </div>
-      </section>
-
-      <!-- FAQ -->
-      <section id="faq">
-        <div class="section-head reveal">
-          <div class="eyebrow">FAQ</div>
-          <h2>ხშირად დასმული კითხვები</h2>
-        </div>
-        <div class="reveal" id="faqList">
-          <div class="faq-item">
-            <button class="faq-q" type="button"><span>შემიძლია პარტნიორის მოყვანა?</span><span class="plus">+</span></button>
-            <div class="faq-a"><p>გთხოვთ, მიუთითოთ სტუმრების ჯამური რაოდენობა RSVP-ში.</p></div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-q" type="button"><span>არის თუ არა პარკინგი ადგილზე?</span><span class="plus">+</span></button>
-            <div class="faq-a"><p>დიახ, ადგილზეა უფასო პარკინგი.</p></div>
           </div>
         </div>
       </section>
@@ -1629,16 +1599,7 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
   });
 
   /* ============================================================
-     9. FAQ
-     ============================================================ */
-  document.querySelectorAll(".faq-q").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      btn.parentElement.classList.toggle("open");
-    });
-  });
-
-  /* ============================================================
-     10. BOOT
+     9. BOOT
      ============================================================ */
   buildStars();
   applyPhase(0);
