@@ -563,15 +563,6 @@ body.opened .scroll-indicator{animation:indicatorIn 1.2s ease 2.6s both;}
 .loc-name{font-family:var(--font-display);font-size:1.4rem;line-height:1.35;margin-top:2px;}
 .loc-address{margin-top:6px;color:var(--ink-soft);font-size:.9rem;}
 
-/* Dress code */
-.dress-art{max-width:340px;margin:0 auto 26px;border-radius:var(--radius);overflow:hidden;
-  border:1px solid var(--line);box-shadow:var(--shadow);}
-.dress-art img{width:100%;aspect-ratio:1/1;object-fit:cover;
-  filter:brightness(calc(1 - .42*var(--night))) saturate(calc(1 - .28*var(--night)));}
-.dress-body{text-align:center;}
-.dress-line{font-size:1.02rem;line-height:1.9;}
-.dress-note{margin-top:14px;color:var(--ink-soft);font-size:.95rem;}
-
 /* RSVP */
 .rsvp-card{
   position:relative;isolation:isolate;padding:26px 20px 22px;
@@ -848,12 +839,12 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
           <article class="card">
             <div class="card-icon" aria-hidden="true">⏰</div>
             <div class="card-label">დრო</div>
-            <div class="info-value">17:00</div>
+            <div class="info-value">11:00</div>
           </article>
           <article class="card">
-            <div class="card-icon" aria-hidden="true">🤍</div>
-            <div class="card-label">Dress code</div>
-            <div class="info-value">Elegant Evening</div>
+            <div class="card-icon" aria-hidden="true">🥂</div>
+            <div class="card-label">რესტორანი</div>
+            <div class="info-value">„ლიდერი“</div>
           </article>
         </div>
       </section>
@@ -909,33 +900,21 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
         <div class="timeline">
           <div class="t-item">
             <span class="t-dot" aria-hidden="true"></span>
-            <div class="t-time">17:00</div>
-            <h3 class="t-title">სტუმართა მიღება</h3>
-            <p class="t-desc">საღამოს მშვიდი დასაწყისი, მისალმებები და პირველი სადღეგრძელოები.</p>
+            <div class="t-time">11:00</div>
+            <h3 class="t-title">ხელის მოწერა</h3>
+            <p class="t-desc">ჩაქვი, „ოაზისი“. ჩვენი დღის ყველაზე ამაღელვებელი წუთები — ვაწერთ ხელს და ოფიციალურად ვიწყებთ საერთო ცხოვრებას.</p>
           </div>
           <div class="t-item">
             <span class="t-dot" aria-hidden="true"></span>
-            <div class="t-time">18:00</div>
-            <h3 class="t-title">ქორწინების ცერემონია</h3>
-            <p class="t-desc">სიყვარულის მთავარი სიტყვები და ჩვენი ყველაზე ამაღელვებელი წუთები.</p>
+            <div class="t-time">ხელის მოწერის შემდეგ</div>
+            <h3 class="t-title">ფოტოსესია</h3>
+            <p class="t-desc">ჯერ ჩაქვის „ოაზისში“, შემდეგ კი ბათუმის ბოტანიკურ ბაღში — მწვანე ხეივნები, ზღვის ხედი და მოგონებები, რომლებიც სამუდამოდ დაგვრჩება.</p>
           </div>
           <div class="t-item">
             <span class="t-dot" aria-hidden="true"></span>
-            <div class="t-time">19:00</div>
-            <h3 class="t-title">ფოტო სესია</h3>
-            <p class="t-desc">ზღვისპირა კადრები, ღიმილი და მოგონებები, რომლებიც სამუდამოდ დაგვრჩება.</p>
-          </div>
-          <div class="t-item">
-            <span class="t-dot" aria-hidden="true"></span>
-            <div class="t-time">20:00</div>
-            <h3 class="t-title">სადღესასწაულო ვახშამი</h3>
-            <p class="t-desc">გემრიელი სუფრა, მუსიკა და ბევრი ცეკვა ვარსკვლავიან ცაზე.</p>
-          </div>
-          <div class="t-item">
-            <span class="t-dot" aria-hidden="true"></span>
-            <div class="t-time">21:30</div>
-            <h3 class="t-title">ტორტის გაჭრა</h3>
-            <p class="t-desc">ტკბილი ფინალი, სურვილები და კიდევ ერთი ლამაზი მომენტი ერთად.</p>
+            <div class="t-time">ფოტოსესიის შემდეგ</div>
+            <h3 class="t-title">სადღესასწაულო სუფრა</h3>
+            <p class="t-desc">რესტორანი „ლიდერი“, ხელვაჩაური. გემრიელი სუფრა, მუსიკა, ცეკვა და თბილი სადღეგრძელოები ჩვენთვის ყველაზე ძვირფას ადამიანებთან ერთად.</p>
           </div>
         </div>
       </section>
@@ -949,43 +928,46 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
         <div class="loc-cards">
           <article class="loc-card reveal">
             <div class="loc-art">
-              <img src="assets/batumi/alinino-paint.jpg" alt="ალი და ნინო, ბათუმი" loading="lazy">
-              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Ali+and+Nino+Batumi" target="_blank" rel="noopener">
+              <img src="assets/batumi/alinino-paint.jpg" alt="ხელის მოწერა — ჩაქვი, „ოაზისი“" loading="lazy">
+              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Oasis+Chakvi" target="_blank" rel="noopener">
                 <span class="loc-badge">რუკაზე ნახვა</span>
               </a>
             </div>
             <div class="loc-info">
-              <div class="loc-label">ცერემონია</div>
-              <div class="loc-time">18:00</div>
-              <div class="loc-name">ბათუმის ბულვარი</div>
-              <div class="loc-address">ალი და ნინო, ბათუმი</div>
+              <div class="loc-label">ხელის მოწერა</div>
+              <div class="loc-time">11:00</div>
+              <div class="loc-name">„ოაზისი“</div>
+              <div class="loc-address">ჩაქვი, აჭარა</div>
             </div>
           </article>
 
           <article class="loc-card reveal">
             <div class="loc-art">
-              <img src="assets/batumi/wheel-paint.jpg" alt="ბათუმის ეშმაკის ბორბალი" loading="lazy">
-              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Batumi+Ferris+Wheel" target="_blank" rel="noopener">
+              <img src="assets/batumi/boulevard.jpg" alt="ფოტოსესია — ბათუმის ბოტანიკური ბაღი" loading="lazy">
+              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Batumi+Botanical+Garden" target="_blank" rel="noopener">
                 <span class="loc-badge">რუკაზე ნახვა</span>
               </a>
             </div>
             <div class="loc-info">
-              <div class="loc-label">სტუმრების მიღება</div>
-              <div class="loc-time">17:00</div>
-              <div class="loc-name">ზღვისპირა რესტორანი</div>
-              <div class="loc-address">ბათუმი, საქართველო</div>
+              <div class="loc-label">ფოტოსესია</div>
+              <div class="loc-name">ბათუმის ბოტანიკური ბაღი</div>
+              <div class="loc-address">მწვანე კონცხი, ბათუმი</div>
             </div>
           </article>
-        </div>
-      </section>
 
-      <!-- Dress code -->
-      <section id="dresscode">
-        <div class="section-head reveal"><div class="eyebrow">დრეს-კოდი</div></div>
-        <div class="dress-art reveal"><img src="assets/photos/2.jpg" alt="" loading="lazy"></div>
-        <div class="dress-body reveal">
-          <p class="dress-line">მამაკაცები: მუქი საზეიმო კოსტიუმი</p>
-          <p class="dress-line">ქალბატონები: საღამოს კაბა</p>
+          <article class="loc-card reveal">
+            <div class="loc-art">
+              <img src="assets/batumi/wheel-paint.jpg" alt="რესტორანი „ლიდერი“, ხელვაჩაური" loading="lazy">
+              <a class="loc-maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Restaurant+Leader+Fridon+Khalvashi+136+Khelvachauri" target="_blank" rel="noopener">
+                <span class="loc-badge">რუკაზე ნახვა</span>
+              </a>
+            </div>
+            <div class="loc-info">
+              <div class="loc-label">სადღესასწაულო სუფრა</div>
+              <div class="loc-name">რესტორანი „ლიდერი“</div>
+              <div class="loc-address">ხელვაჩაური, ფრიდონ ხალვაშის ქ. №136</div>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -1047,10 +1029,6 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
           <h2>ხშირად დასმული კითხვები</h2>
         </div>
         <div class="reveal" id="faqList">
-          <div class="faq-item">
-            <button class="faq-q" type="button"><span>რა არის დრეს-კოდი?</span><span class="plus">+</span></button>
-            <div class="faq-a"><p>Elegant Evening — საღამოს ელეგანტური სტილი. მამაკაცებისთვის მუქი კოსტიუმი, ქალბატონებისთვის საღამოს კაბა.</p></div>
-          </div>
           <div class="faq-item">
             <button class="faq-q" type="button"><span>შემიძლია პარტნიორის მოყვანა?</span><span class="plus">+</span></button>
             <div class="faq-a"><p>გთხოვთ, მიუთითოთ სტუმრების ჯამური რაოდენობა RSVP-ში.</p></div>
@@ -1468,7 +1446,7 @@ textarea.text-input{min-height:88px;resize:vertical;line-height:1.7;}
      6. COUNTDOWN — always in the venue's own timezone, so a guest
      opening this from abroad sees the Batumi clock, not theirs.
      ============================================================ */
-  var TARGET = new Date("2026-10-09T17:00:00+04:00").getTime();
+  var TARGET = new Date("2026-10-09T11:00:00+04:00").getTime();
   var cd = {d:document.getElementById("cd-d"), h:document.getElementById("cd-h"),
             m:document.getElementById("cd-m"), s:document.getElementById("cd-s")};
   function pad(n){ return n < 10 ? "0"+n : ""+n; }
